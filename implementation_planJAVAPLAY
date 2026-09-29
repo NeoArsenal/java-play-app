@@ -1,0 +1,114 @@
+# 🗺️ Plan Maestro de Implementación: Java & Spring Interview Duolingo
+
+Este plan detalla la hoja de ruta para evolucionar **JavaPlay** desde el MVP actual hacia una plataforma completa de grado industrial para la preparación de entrevistas técnicas Senior y Staff.
+
+---
+
+## 🏛️ Arquitectura General del Sistema
+
+```mermaid
+graph TD
+    subgraph "Móvil / Web (Flutter)"
+        UI["UI Gamificada (Material 3)"]
+        Tree["Árbol de Aprendizaje (10 Mundos)"]
+        Engine["Quiz & Gamification Engine (Riverpod)"]
+        SRS["Spaced Repetition System (SM-2)"]
+        Mock["Mock Interview con Audio Recorder"]
+        LocalDB[("Persistencia Offline (Isar DB)")]
+    end
+
+    subgraph "Servicios Cloud / Backend"
+        API["Backend Spring Boot 3.x REST / WebSocket"]
+        Auth["Spring Security 6 + JWT OAuth2"]
+        AIService["AI Evaluator (Gemini API / Whisper STT)"]
+        CloudDB[("PostgreSQL 16 + Redis (Ligas / Racha)")]
+    end
+
+    UI --> Engine
+    UI --> Tree
+    UI --> Mock
+    Engine --> SRS
+    Engine --> LocalDB
+    Mock --> AIService
+    SRS --> LocalDB
+    LocalDB <-->|Sync Bidireccional| API
+    API --> Auth
+    API --> CloudDB
+```
+
+---
+
+## 📅 Fases de Implementación
+
+### Fase 1: Enriquecimiento de Ejercicios y UI/UX (Semanas 1 - 2)
+> **Objetivo**: Elevar la interactividad y fidelidad al estándar visual y mecánico de Duolingo.
+
+- [ ] **Nuevos Tipos de Ejercicios Técnicos**:
+  - **Spot the Bug (Code Tapping)**: El usuario visualiza un método Java con un error sutil (ej. `Double-Checked Locking` sin `volatile` o `@Transactional` en método privado) y debe tocar la línea exacta donde reside el bug.
+  - **Big-O & Complexity Matcher**: Emparejar operaciones de colecciones (`ConcurrentHashMap.put()`, `ArrayList.add()`, `TreeMap.get()`) con su complejidad temporal y espacial ($O(1)$, $O(\log n)$, $O(n)$).
+  - **JVM Argument Builder**: Arrastrar modificadores de rendimiento de la JVM (`-Xmx4g`, `-XX:+UseZGC`, `-Xss512k`, `-XX:+HeapDumpOnOutOfMemoryError`) según un requerimiento de producción.
+- [ ] **Efectos y Micro-Animaciones**:
+  - Efecto de rebote 3D en tarjetas y botones (`Transform.translate` en presión).
+  - Confeti animado al completar lecciones y rachas (`confetti` package).
+  - Transición fluida de la barra de progreso superior con interpolación elástica.
+- [ ] **Tienda de Recompensas (Shop)**:
+  - Compra de "Recargas de Vidas" usando gemas acumuladas.
+  - "Streak Freeze" (escudo para no perder la racha si un día no se practica).
+
+---
+
+### Fase 2: Repetición Espaciada (SRS) y Persistencia Offline (Semanas 3 - 4)
+> **Objetivo**: Asegurar retención a largo plazo con almacenamiento local sin conexión.
+
+- [ ] **Algoritmo SM-2 (SuperMemo-2)**:
+  - Cada concepto/pregunta tiene un intervalo de revisión ($1, 3, 7, 14, 30$ días) basado en si el usuario acertó al primer intento o requirió reintentos.
+  - Las preguntas falladas se reinsertan automáticamente en la cola de repaso diario.
+- [ ] **Base de Datos Local con Isar**:
+  - Modelos indexados: `UserProgress`, `ExerciseStats`, `StreakRecord`, `OfflineCurriculum`.
+  - Cero tiempos de carga y funcionamiento 100% offline.
+- [ ] **Expansión del Curriculum a 10 Mundos**:
+  1. Java Core, OOP & JVM Internals (Stack, Heap, Metaspace, GC ZGC/G1).
+  2. Collections, Generics & Streams API.
+  3. Multithreading, JMM & Virtual Threads (Project Loom, Java 21).
+  4. Spring Boot Core, IoC Container, Bean Lifecycle & Proxies.
+  5. Spring Data JPA, Hibernate, N+1 & Transacciones.
+  6. Spring Security 6 & OAuth2 / JWT.
+  7. Microservicios, Resiliencia (Resilience4j) & Spring Cloud.
+  8. Mensajería Asíncrona (Apache Kafka, RabbitMQ).
+  9. Estrategias de Testing (JUnit 5, Mockito, Testcontainers, ArchUnit).
+  10. Cloud Native, Docker, Kubernetes & Observabilidad (Micrometer, Actuator).
+
+---
+
+### Fase 3: Simulador de Entrevistas con IA (Semanas 5 - 6)
+> **Objetivo**: Transformar el Mock Interview de una autoevaluación pasiva a un entrevistador técnico interactivo.
+
+- [ ] **Transcripción de Voz (Speech-to-Text)**:
+  - Conversión del audio grabado a texto para evaluar la fluidez y terminología técnica usada.
+- [ ] **Evaluador Semántico con IA (Gemini API)**:
+  - Prompt especializado con rol de *Senior Java Interviewer*.
+  - Calificación en 3 ejes:
+    1. **Precisión Técnica** (Uso correcto de conceptos como *Proxy CGLIB*, *Stateless*, *Memory Barrier*).
+    2. **Estructura de Comunicación** (Contexto ➔ Causa Raíz ➔ Solución ➔ Trade-offs).
+    3. **Preguntas de Repregunta (Follow-ups)** personalizadas según la respuesta dada por el usuario.
+
+---
+
+### Fase 4: Backend Spring Boot, Ligas y Modo Multijugador (Semanas 7 - 8)
+> **Objetivo**: Escalabilidad, tablas de clasificación social y sincronización entre dispositivos.
+
+- [ ] **Backend Spring Boot 3.3**:
+  - Arquitectura Hexagonal / Clean Architecture.
+  - Base de datos PostgreSQL con migraciones Flyway.
+  - Redis para leaderboard global de XP en tiempo real (Sorted Sets).
+- [ ] **Sistema de Ligas Semanales**:
+  - Ligas: *Bronce ➔ Plata ➔ Oro ➔ Platino ➔ Diamante ➔ JVM Staff Master*.
+  - Ascensos de los 10 primeros usuarios cada domingo a medianoche.
+- [ ] **Duelo Técnico en Tiempo Real (1v1 WebSocket)**:
+  - Dos usuarios compiten contra el reloj para resolver 5 preguntas de código en 60 segundos.
+
+---
+
+## 🚀 Próximo Paso Inmediato Recomendado
+
+Podemos comenzar implementando el **ejercicio "Spot the Bug" (tocar la línea con error)** y la **persistencia local del progreso**, o enriquecer el prototipo con el catálogo completo de los 10 mundos.

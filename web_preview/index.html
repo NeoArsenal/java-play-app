@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Java & Spring Interview Duolingo - De Cero a Senior (Nivel 0 al 10)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #13141B;
+      --surface: #1E1F29;
+      --surface-border: #2E303E;
+      --primary-green: #58CC02;
+      --primary-green-dark: #46A302;
+      --success-bg: #17381E;
+      --success-border: #265C30;
+      --error-red: #EA2B2B;
+      --error-red-dark: #BA2222;
+      --error-bg: #3B181E;
+      --error-border: #5C262C;
+      --blue: #1CB0F6;
+      --gold: #FFC800;
+      --purple: #CE82FF;
+      --orange: #FF9600;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A0A2B0;
+      --text-disabled: #5A5C6A;
+      --code-bg: #0F1015;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: #0b0c10;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Device Preview Container */
+    .mobile-frame {
+      width: 100%;
+      max-width: 440px;
+      height: 900px;
+      background-color: var(--bg);
+      border-radius: 40px;
+      border: 6px solid #282a36;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(88, 204, 2, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--surface-border);
+      z-index: 10;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      transition: transform 0.1s;
+    }
+    .close-btn:hover { color: white; transform: scale(1.1); }
+
+    .progress-container {
+      flex: 1;
+      height: 14px;
+      background-color: var(--surface-border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #58CC02, #79E227);
+      width: 25%;
+      border-radius: 10px;
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .stats-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--surface-border);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .lives-badge { color: var(--error-red); }
+    .streak-badge { color: var(--orange); }
+    .xp-badge { color: var(--gold); }
+
+    /* Level Selector Pill */
+    .level-bar {
+      padding: 10px 20px 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .level-select {
+      width: 100%;
+      background-color: var(--surface);
+      color: var(--primary-green);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      border: 1.5px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 9px 12px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .backend-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-end;
+      padding-right: 4px;
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .exercise-type-tag {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .question-title {
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 14px;
+    }
+
+    /* Code Box */
+    .code-box {
+      background-color: var(--code-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--gold);
+      line-height: 1.45;
+      white-space: pre-wrap;
+      margin-bottom: 18px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    /* Spot the Bug Code Inspector */
+    .bug-inspector-box {
+      background-color: var(--code-bg);
+      border: 1.5px solid var(--surface-border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .bug-line {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      cursor: pointer;
+      border-left: 4px solid transparent;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.15s ease;
+    }
+
+    .bug-line:hover {
+      background-color: rgba(255,255,255,0.03);
+    }
+
+    .bug-line.selected {
+      background-color: rgba(234, 43, 43, 0.18);
+      border-left-color: var(--error-red);
+    }
+
+    .bug-line-number {
+      width: 28px;
+      color: var(--text-disabled);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .bug-line.selected .bug-line-number {
+      color: var(--error-red);
+    }
+
+    .bug-line-text {
+      color: #ECEFF4;
+      flex: 1;
+    }
+
+    .bug-line.selected .bug-line-text {
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    /* Multiple Choice Options */
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-card {
+      background-color: var(--surface);
+      border: 2px solid var(--surface-border);
+      border-radius: 18px;
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    }
+
+    .option-card:hover {
+      border-color: #4a4d61;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.4);
+    }
+
+    .option-card.selected {
+      background-color: rgba(88, 204, 2, 0.12);
+      border-color: var(--primary-green);
+      box-shadow: 0 4px 0 rgba(88, 204, 2, 0.4);
+    }
+
+    .pill-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--text-disabled);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .option-card.selected .pill-letter {
+      border-color: var(--primary-green);
+      background-color: var(--primary-green);
+      color: white;
+    }
+
+    .option-text {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .option-card.eliminated {
+      opacity: 0.25 !important;
+      pointer-events: none !important;
+      text-decoration: line-through;
+      filter: grayscale(1);
+    }
+
+    .assist-banner {
+      background: linear-gradient(135deg, rgba(255, 200, 0, 0.18), rgba(28, 176, 246, 0.12));
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      line-height: 1.4;
+      color: #FFF;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(255, 200, 0, 0.1);
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Token Reorder Chips */
+    .token-target-box {
+      min-height: 80px;
+      background-color: var(--code-bg);
+      border: 2px dashed var(--surface-border);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .token-selected {
+      background-color: rgba(88, 204, 2, 0.2);
+      border: 1.5px solid var(--primary-green);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chips-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .chip-btn {
+      background-color: var(--surface);
+      border: 1.5px solid var(--surface-border);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+      transition: all 0.15s;
+    }
+    .chip-btn:hover { border-color: var(--primary-green); transform: translateY(-2px); }
+
+    /* Bottom Feedback Bar */
+    .bottom-bar {
+      padding: 16px 20px 22px 20px;
+      background-color: var(--surface);
+      border-top: 2px solid var(--surface-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: background-color 0.25s, border-color 0.25s;
+    }
+
+    .bottom-bar.correct {
+      background-color: var(--success-bg);
+      border-top-color: var(--success-border);
+    }
+
+    .bottom-bar.incorrect {
+      background-color: var(--error-bg);
+      border-top-color: var(--error-border);
+    }
+
+    .feedback-info {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .feedback-title {
+      font-size: 17px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feedback-explanation {
+      font-size: 13px;
+      color: rgba(255,255,255,0.9);
+      line-height: 1.4;
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 16px;
+      border: none;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 1.1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      transition: all 0.15s;
+      background-color: var(--primary-green);
+      color: white;
+    }
+
+    .primary-btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.4);
+    }
+
+    .primary-btn:disabled {
+      background-color: var(--surface-border);
+      color: var(--text-disabled);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .primary-btn.btn-error {
+      background-color: var(--error-red);
+    }
+
+    .mode-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .mode-tab {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .mode-tab.active {
+      background: var(--primary-green);
+      color: white;
+      border-color: var(--primary-green);
+    }
+
+    /* Duolingo Winding Path Styles */
+    .path-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0 40px 0;
+      position: relative;
+    }
+
+    .world-header-card {
+      width: 100%;
+      background: linear-gradient(135deg, rgba(88, 204, 2, 0.18), rgba(28, 176, 246, 0.15));
+      border: 1.5px solid var(--primary-green);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 24px;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .difficulty-selector {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 3px;
+      margin-top: 12px;
+      gap: 4px;
+    }
+
+    .diff-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 7px 4px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .diff-btn.active {
+      background: var(--primary-green);
+      color: white;
+      box-shadow: 0 2px 8px rgba(88, 204, 2, 0.3);
+    }
+
+    .path-row {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .path-node {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-weight: 900;
+      font-size: 20px;
+      border: 4px solid;
+    }
+
+    .path-node:hover {
+      transform: scale(1.08) translateY(-2px);
+    }
+
+    .path-node.completed {
+      background-color: var(--primary-green);
+      border-color: #46A302;
+      color: white;
+      box-shadow: 0 6px 0 #337A01;
+    }
+
+    .path-node.active-current {
+      background-color: var(--gold);
+      border-color: #D9A700;
+      color: #13141B;
+      box-shadow: 0 6px 0 #A88100, 0 0 25px rgba(255, 200, 0, 0.5);
+      animation: pulseNode 1.8s infinite;
+    }
+
+    .path-node.locked {
+      background-color: var(--surface);
+      border-color: var(--surface-border);
+      color: var(--text-disabled);
+      box-shadow: 0 6px 0 #181922;
+      cursor: not-allowed;
+    }
+
+    .path-node.boss-castle {
+      width: 82px;
+      height: 82px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #FFC800, #FF9600);
+      border-color: #FFF;
+      color: #13141B;
+      box-shadow: 0 8px 0 #A88100, 0 0 35px rgba(255, 150, 0, 0.6);
+      font-size: 32px;
+    }
+
+    .path-node.chest {
+      width: 58px;
+      height: 58px;
+      background: linear-gradient(135deg, #CE82FF, #9B30FF);
+      border-color: #E2ADFF;
+      box-shadow: 0 6px 0 #6810B8;
+      font-size: 24px;
+    }
+
+    .node-popup-bubble {
+      position: absolute;
+      bottom: 80px;
+      background: var(--surface);
+      border: 2px solid var(--primary-green);
+      border-radius: 16px;
+      padding: 10px 14px;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 50;
+      animation: popIn 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .node-popup-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 8px 8px 0;
+      border-style: solid;
+      border-color: var(--primary-green) transparent;
+      display: block;
+      width: 0;
+    }
+
+    @keyframes pulseNode {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    /* FASE 3: MOCK INTERVIEW STYLES */
+    .wave-bar {
+      display: inline-block;
+      width: 4px;
+      height: 14px;
+      background-color: var(--primary-green);
+      border-radius: 3px;
+      animation: wavePulse 0.9s infinite ease-in-out;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.15s; height: 24px; background-color: var(--blue); }
+    .wave-bar:nth-child(3) { animation-delay: 0.3s; height: 32px; background-color: var(--gold); }
+    .wave-bar:nth-child(4) { animation-delay: 0.45s; height: 20px; background-color: var(--purple); }
+    .wave-bar:nth-child(5) { animation-delay: 0.6s; height: 16px; background-color: var(--primary-green); }
+
+    @keyframes wavePulse {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+      50% { transform: scaleY(1.3); opacity: 1; }
+    }
+
+    .axis-bar-container {
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .axis-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    <!-- Header with Gamification stats -->
+    <div class="top-bar">
+      <button class="close-btn" onclick="restartLesson()" title="Reiniciar">✕</button>
+      <div class="progress-container">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+      <div class="stats-badge streak-badge">🔥 <span id="streakCount">3</span></div>
+      <div class="stats-badge lives-badge">❤️ <span id="livesCount">5</span></div>
+      <div class="stats-badge xp-badge">⚡ <span id="xpCount">180</span></div>
+    </div>
+
+    <!-- Level Selector Bar (Nivel 0 al 10) -->
+    <div class="level-bar">
+      <div class="backend-badge" id="backendStatus">🟢 Backend REST API Conectado</div>
+      <select id="worldSelect" class="level-select" onchange="changeWorld(this.value)">
+        <option value="mundo_0">🐣 Mundo 0: Onboarding & Fundamentos para Principiantes (5 Niveles)</option>
+        <option value="mundo_1">🌱 Mundo 1: Fundamentos Nucleares de Java & Memoria</option>
+        <option value="mundo_2">🏠 Mundo 2: POO & Modelado de Clases</option>
+        <option value="mundo_3">📜 Mundo 3: Interfaces, Abstracción & Contratos</option>
+        <option value="mundo_4">🛡️ Mundo 4: Manejo Profesional de Excepciones</option>
+        <option value="mundo_5">⚡ Mundo 5: Colecciones, Genéricos & HashMap</option>
+        <option value="mundo_6">🌊 Mundo 6: Java Moderno, Lambdas & Streams</option>
+        <option value="mundo_7">🍃 Mundo 7: Spring Boot Core & IoC Container</option>
+        <option value="mundo_8">🌐 Mundo 8: APIs REST Profesionales & Validación</option>
+        <option value="mundo_9">💾 Mundo 9: Spring Data JPA & Persistencia</option>
+        <option value="mundo_10">👑 Mundo 10: Concurrencia, Virtual Threads & Microservicios</option>
+      </select>
+      <div class="mode-switcher">
+        <button class="mode-tab active" id="tabQuiz" onclick="switchMainMode('quiz')">LECCIONES & CAMINO</button>
+        <button class="mode-tab" id="tabSrs" onclick="switchMainMode('srs')">🧠 REPASO SM-2 (<span id="srsDueBadge">4</span>)</button>
+        <button class="mode-tab" id="tabMock" onclick="switchMainMode('mock')">🎙️ MOCK INTERVIEW</button>
+      </div>
+    </div>
+
+    <!-- Content Screen -->
+    <div class="content-area">
+      <!-- 1. QUIZ / PATH VIEW -->
+      <div id="quizView" style="display: block;">
+        <div id="pathView" style="display: block;"></div>
+        <div id="exerciseHost" style="display: none;"></div>
+      </div>
+
+      <!-- 2. SPACED REPETITION (SM-2) VIEW -->
+      <div id="srsView" style="display: none;">
+        <div style="background: linear-gradient(135deg, #1C2333, #151822); border: 1.5px solid var(--surface-border); border-radius: 20px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px;">CURVA DEL OLVIDO (EBBINGHAUS)</div>
+              <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 2px;">
+                <span id="srsRetentionRate" style="font-size: 26px; font-weight: 900; color: var(--primary-green);">82%</span>
+                <span style="font-size: 12.5px; color: rgba(255,255,255,0.7);">Retención Proyectada</span>
+              </div>
+            </div>
+            <div style="background: rgba(255, 200, 0, 0.15); border: 1px solid var(--gold); border-radius: 16px; padding: 4px 10px; font-size: 11.5px; font-weight: 800; color: var(--gold);">
+              EF: <span id="srsEaseFactor">2.51</span>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <div style="background: var(--surface); padding: 8px; border-radius: 12px; text-align: center; border: 1px solid var(--surface-border);">
+              <div id="srsStatDue" style="font-size: 17px; font-weight: 900; color: var(--orange);">4</div>
+              <div style="font-size: 10.5px; color: var(--text-secondary);">⏳ Para Hoy</div>
+            </div>
+            <div style="background: var(--surface); padding: 8px; border-radius: 12px; text-align: center; border: 1px solid var(--surface-border);">
+              <div id="srsStatLearning" style="font-size: 17px; font-weight: 900; color: var(--blue);">4</div>
+              <div style="font-size: 10.5px; color: var(--text-secondary);">🌱 Aprendiendo</div>
+            </div>
+            <div style="background: var(--surface); padding: 8px; border-radius: 12px; text-align: center; border: 1px solid var(--surface-border);">
+              <div id="srsStatMastered" style="font-size: 17px; font-weight: 900; color: var(--primary-green);">1</div>
+              <div style="font-size: 10.5px; color: var(--text-secondary);">👑 Dominadas</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="srsCardArea">
+          <!-- Filled dynamically by renderSrsCard() -->
+        </div>
+      </div>
+
+      <!-- 3. MOCK INTERVIEW VIEW (FASE 3: SIMULADOR CON IA) -->
+      <div id="mockView" style="display: none;">
+        <!-- Header with Selector -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="exercise-type-tag" style="color: var(--orange); margin: 0;">🎙️ SIMULADOR DE ENTREVISTA CON IA</div>
+          <button class="diff-btn" style="padding: 4px 10px; font-size: 11px;" onclick="loadRandomMockQuestion()">🎲 OTRA PREGUNTA</button>
+        </div>
+
+        <!-- Question Select Bar -->
+        <div style="margin-bottom: 12px;">
+          <select id="mockQuestionSelect" class="level-select" style="font-size: 12px; padding: 7px 10px; background: #1C2333;" onchange="selectMockQuestionById(this.value)">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Question Display Card -->
+        <div id="mockQuestionCard" style="background: linear-gradient(135deg, #1C2333, #151822); border: 1.5px solid var(--surface-border); border-radius: 20px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.35);">
+          <div id="mockCategoryBadge" style="font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">
+            🍃 SPRING BOOT & CONCURRENCIA
+          </div>
+          <div id="mockQuestionTitle" style="font-size: 17px; font-weight: 900; color: white; line-height: 1.35; margin-bottom: 8px;">
+            Arquitectura y Concurrencia en Spring Boot
+          </div>
+          <div id="mockQuestionText" style="font-size: 13.5px; color: rgba(255,255,255,0.95); line-height: 1.45; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 12px; border-left: 3px solid var(--blue);">
+            Si los Beans son Singleton por defecto y la aplicación atiende cientos de peticiones en paralelo con hilos distintos, ¿qué riesgos de concurrencia existen y cómo garantizas Thread-Safety?
+          </div>
+          <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-secondary);">
+            <span>⏱️ Tiempo Límite: <strong id="mockTimeLimitLabel" style="color: var(--primary-green);">60s</strong></span>
+            <span>💡 Rúbrica: <strong>3 Ejes (Técnico, Estructura, Trade-offs)</strong></span>
+          </div>
+        </div>
+
+        <!-- Recording & Input Area (shown during interview) -->
+        <div id="mockInputArea">
+          <!-- Input Mode Switcher: Voz vs Texto -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <button id="modeVoiceBtn" class="mode-tab active" style="flex: 1; padding: 8px; font-size: 12px;" onclick="switchMockInputMode('voice')">🎙️ DICTAR POR VOZ</button>
+            <button id="modeTextBtn" class="mode-tab" style="flex: 1; padding: 8px; font-size: 12px;" onclick="switchMockInputMode('text')">✍️ ESCRIBIR RESPUESTA</button>
+          </div>
+
+          <!-- Voice Recording Panel -->
+          <div id="voicePanel" style="background: var(--surface); border: 2px solid var(--surface-border); border-radius: 20px; padding: 18px; text-align: center;">
+            <div id="mockTimer" style="font-size: 46px; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: var(--primary-green); margin-bottom: 4px;">60s</div>
+            <p id="mockStatusText" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">
+              Presiona el botón para comenzar a hablar. El sistema transcribirá tu voz en vivo.
+            </p>
+
+            <!-- Pulse Waves Visualizer -->
+            <div id="audioWaveVisualizer" style="display: none; height: 32px; align-items: center; justify-content: center; gap: 5px; margin-bottom: 14px;">
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+            </div>
+
+            <button id="mockRecordBtn" class="primary-btn" style="background-color: var(--primary-green); max-width: 250px; margin: 0 auto 12px auto;" onclick="toggleMockRecording()">
+              🎙️ INICIAR RESPUESTA
+            </button>
+
+            <!-- Real-time Live Transcript Box -->
+            <div style="text-align: left; margin-top: 12px;">
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); margin-bottom: 4px; display: flex; justify-content: space-between;">
+                <span>TRANSCRIPCIÓN EN TIEMPO REAL:</span>
+                <span id="transcriptWordCount" style="color: var(--primary-green);">0 palabras</span>
+              </div>
+              <div id="liveTranscriptBox" style="background: rgba(0,0,0,0.35); border: 1.5px solid var(--surface-border); border-radius: 12px; padding: 12px; min-height: 80px; max-height: 120px; overflow-y: auto; font-size: 13px; line-height: 1.4; color: #ECEFF4;" contenteditable="true" placeholder="Tu respuesta hablada o editada aparecerá aquí..." oninput="updateLiveTranscriptCount()"></div>
+            </div>
+          </div>
+
+          <!-- Text Writing Panel (alternative) -->
+          <div id="textPanel" style="display: none; background: var(--surface); border: 2px solid var(--surface-border); border-radius: 20px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+              <span style="font-weight: 800; color: white;">Escribe tu respuesta técnica:</span>
+              <span id="textInputWordCount" style="color: var(--primary-green);">0 palabras</span>
+            </div>
+            <textarea id="mockTextInput" style="width: 100%; height: 140px; background: rgba(0,0,0,0.35); border: 1.5px solid var(--surface-border); border-radius: 14px; padding: 12px; color: white; font-family: inherit; font-size: 13.5px; line-height: 1.45; resize: none;" placeholder="Desarrolla aquí tu respuesta técnica para el entrevistador. Menciona mecanismos de la JVM, anotaciones, impacto en concurrencia y trade-offs..." oninput="updateTextWordCount()"></textarea>
+          </div>
+
+          <!-- Action Button to Evaluate -->
+          <button id="evaluateBtn" class="primary-btn" style="margin-top: 14px; background: linear-gradient(135deg, #1CB0F6, #0084C6);" onclick="submitMockAnswer()">
+            🤖 EVALUAR RESPUESTA CON IA (+50 XP)
+          </button>
+        </div>
+
+        <!-- AI Evaluation Result Screen (shown after evaluation) -->
+        <div id="mockEvaluationArea" style="display: none; animation: popIn 0.3s ease;">
+          <!-- Filled dynamically by renderMockAiReport(res) -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Duolingo Action Bar -->
+    <div id="bottomBar" class="bottom-bar">
+      <div id="feedbackInfo" class="feedback-info">
+        <div id="feedbackTitle" class="feedback-title"></div>
+        <div id="feedbackText" class="feedback-explanation"></div>
+      </div>
+      <div id="actionButtonGroup" style="display: flex; gap: 10px; width: 100%;">
+        <button id="retryHintBtn" class="primary-btn" style="display: none; background: linear-gradient(135deg, #FFC800, #FF9600); color: #13141B; flex: 1.5; font-size: 13.5px;" onclick="activateAssistMode()">💡 RESOLVER CON PISTAS (+5 XP)</button>
+        <button id="actionBtn" class="primary-btn" style="flex: 1;" disabled onclick="handleActionClick()">COMPROBAR</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Auto-detect production host or local dev
+    const BACKEND_URL = (window.location.protocol === 'http:' || window.location.protocol === 'https:') && !window.location.host.includes('localhost')
+      ? `${window.location.origin}/api`
+      : 'http://localhost:8080/api';
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playSound(type) {
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(450, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.05);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'correct') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          osc.frequency.setValueAtTime(1046.50, now + 0.24);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+          osc.start(now);
+          osc.stop(now + 0.5);
+        } else if (type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.setValueAtTime(130, now + 0.15);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        }
+      } catch (e) { }
+    }
+
+    // Persisted User Stats
+    let xp = parseInt(localStorage.getItem('java_play_xp') || '180', 10);
+    let lives = parseInt(localStorage.getItem('java_play_lives') || '5', 10);
+    let streak = parseInt(localStorage.getItem('java_play_streak') || '3', 10);
+
+    function updateStatsUI() {
+      document.getElementById('xpCount').textContent = xp;
+      document.getElementById('livesCount').textContent = lives;
+      document.getElementById('streakCount').textContent = streak;
+      localStorage.setItem('java_play_xp', xp);
+      localStorage.setItem('java_play_lives', lives);
+      localStorage.setItem('java_play_streak', streak);
+
+      // Async sync with Backend
+      fetch(`${BACKEND_URL}/progress/user_1`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lives, streak, xpDelta: 0 })
+      }).catch(() => {});
+    }
+
+    // Check backend status
+    fetch(`${BACKEND_URL}/health`)
+      .then(r => r.json())
+      .then(() => {
+        document.getElementById('backendStatus').innerHTML = '🟢 Backend Spring Boot / REST Conectado';
+      })
+      .catch(() => {
+        document.getElementById('backendStatus').innerHTML = '🟡 Modo Offline (Persistencia Local)';
+      });
+
+    // Worlds & Curriculum in Memory
+    let fullCurriculum = null;
+    let currentWorldIndex = 0;
+    let currentExerciseIndex = 0;
+    let currentExercises = [];
+
+    // Interaction states
+    let selectedOptionIndex = null;
+    let selectedBugLineIndex = null;
+    let userOrderedTokens = [];
+    let availableTokens = [];
+    let answerState = 'unselected';
+
+    // Mock Interview State
+    let mockTimerInterval = null;
+    let mockSecondsLeft = 50;
+    let isMockRecording = false;
+
+    // Load curriculum from backend or fallback local file
+    async function loadCurriculum() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/curriculum`);
+        fullCurriculum = await res.json();
+      } catch (e) {
+        // Fallback to fetch relative curriculum.json
+        try {
+          const res = await fetch('../assets/data/curriculum.json');
+          fullCurriculum = await res.json();
+        } catch (err) {
+          console.warn('Fallback loading error', err);
+        }
+      }
+
+      if (fullCurriculum && fullCurriculum.worlds && fullCurriculum.worlds.length > 0) {
+        changeWorld(fullCurriculum.worlds[0].id);
+      }
+    }
+
+    let currentWorld = null;
+    let currentLessonIndex = 0;
+    let isLevelActive = false;
+    let isBossMode = false;
+    let bossCorrectCount = 0;
+
+    let userCompletedLevels = JSON.parse(localStorage.getItem('java_play_completed_levels') || '{"mundo_1": 2}');
+    let selectedDifficulty = localStorage.getItem('java_play_difficulty') || 'normal';
+
+    function setDifficulty(diff) {
+      playSound('click');
+      selectedDifficulty = diff;
+      localStorage.setItem('java_play_difficulty', diff);
+      renderPathDOM();
+    }
+
+    function getQuestionLimit() {
+      if (selectedDifficulty === 'easy') return 5;
+      if (selectedDifficulty === 'normal') return 7;
+      return 10;
+    }
+
+    function changeWorld(worldId) {
+      playSound('click');
+      currentWorld = fullCurriculum.worlds.find(w => w.id === worldId) || fullCurriculum.worlds[0];
+      const sel = document.getElementById('worldSelect');
+      if (sel && currentWorld) sel.value = currentWorld.id;
+      returnToPath();
+    }
+
+    function returnToPath() {
+      isLevelActive = false;
+      isBossMode = false;
+      document.getElementById('pathView').style.display = 'block';
+      document.getElementById('exerciseHost').style.display = 'none';
+      document.getElementById('bottomBar').style.display = 'none';
+      document.getElementById('progressBar').style.width = '0%';
+      renderPathDOM();
+    }
+
+    function renderPathDOM() {
+      if (!currentWorld) return;
+      const pathView = document.getElementById('pathView');
+      const completedCount = userCompletedLevels[currentWorld.id] || 0;
+      const totalLessons = currentWorld.lessons ? currentWorld.lessons.length : 10;
+
+      // S-curve offsets for 10 stepping stones: Left (-45px), Center-Left (-20px), Center (+15px), Center-Right (+45px)...
+      const offsets = [-45, -20, 15, 45, 20, -15, -45, -20, 20, 0];
+
+      let lessonsHtml = '';
+      currentWorld.lessons.forEach((lesson, idx) => {
+        const num = idx + 1;
+        const isCompleted = num <= completedCount;
+        const isCurrent = num === completedCount + 1;
+        const isLocked = num > completedCount + 1;
+        const offset = offsets[idx % offsets.length];
+
+        let stateClass = isCompleted ? 'completed' : (isCurrent ? 'active-current' : 'locked');
+        let nodeIcon = isCompleted ? '⭐' : (isCurrent ? '👑' : '🔒');
+
+        lessonsHtml += `
+          <div class="path-row">
+            <div class="path-node ${stateClass}" style="transform: translateX(${offset}px);" onclick="onNodeClick(${idx}, ${isLocked})" title="${escapeHtml(lesson.title)}">
+              ${nodeIcon}
+              <span style="font-size: 10px; font-weight: 800; margin-top: 2px;">${num}</span>
+              ${isCurrent ? `
+                <div class="node-popup-bubble">
+                  <span>${escapeHtml(lesson.title)}</span>
+                  <span style="color: var(--gold); font-size: 11px;">⚡ +${lesson.xpReward} XP • ${getQuestionLimit()} preguntas</span>
+                  <button class="primary-btn" style="padding: 6px 14px; font-size: 11px; margin-top: 4px;" onclick="startLesson(${idx})">¡EMPEZAR!</button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        // Milestone Chest at Level 3 for Mundo 0, Level 5 for 10-level worlds
+        const chestMilestone = totalLessons <= 5 ? 3 : 5;
+        if (num === chestMilestone) {
+          lessonsHtml += `
+            <div class="path-row">
+              <div class="path-node chest" style="transform: translateX(40px);" onclick="claimChest()" title="Cofre de Recompensa">
+                🎁
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      // Boss Challenge Stone at the end of the path
+      const isBossUnlocked = completedCount >= totalLessons;
+      const bossClass = isBossUnlocked ? 'path-node boss-castle active-current' : 'path-node boss-castle locked';
+
+      lessonsHtml += `
+        <div class="path-row" style="margin-top: 10px; margin-bottom: 30px;">
+          <div class="${bossClass}" onclick="onBossNodeClick(${isBossUnlocked})" title="Desafío Final del Módulo">
+            🏰
+            <div style="font-size: 10px; font-weight: 900; margin-top: 2px; text-transform: uppercase;">DESAFÍO</div>
+          </div>
+        </div>
+      `;
+
+      pathView.innerHTML = `
+        <div class="path-container">
+          <!-- World Header Card -->
+          <div class="world-header-card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase;">
+              ${currentWorld.badge} ${currentWorld.level === 0 ? 'MÓDULO ONBOARDING PRINCIPLANTE' : `MÓDULO ${currentWorld.level} DE 10`}
+            </div>
+            <div style="font-size: 18px; font-weight: 900; color: white; margin: 4px 0 6px 0;">
+              ${escapeHtml(currentWorld.title)}
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
+              ${escapeHtml(currentWorld.description)}
+            </div>
+
+            <!-- Difficulty Switcher -->
+            <div style="margin-top: 14px; font-size: 11.5px; font-weight: 800; color: white; display: flex; justify-content: space-between; align-items: center;">
+              <span>Dificultad de Lecciones:</span>
+              <span style="color: var(--primary-green);">${getQuestionLimit()} Preguntas / Nivel</span>
+            </div>
+            <div class="difficulty-selector">
+              <button class="diff-btn ${selectedDifficulty === 'easy' ? 'active' : ''}" onclick="setDifficulty('easy')">⚡ ÁGIL (5)</button>
+              <button class="diff-btn ${selectedDifficulty === 'normal' ? 'active' : ''}" onclick="setDifficulty('normal')">🎯 NORMAL (7)</button>
+              <button class="diff-btn ${selectedDifficulty === 'hard' ? 'active' : ''}" onclick="setDifficulty('hard')">🔥 SENIOR (10)</button>
+            </div>
+
+            <div style="margin-top: 12px; font-size: 12px; font-weight: 700; color: var(--text-secondary);">
+              Progreso del Camino: <strong style="color: var(--primary-green);">${completedCount} de ${totalLessons} Niveles</strong>
+            </div>
+          </div>
+
+          <!-- Stepping Stones Path -->
+          ${lessonsHtml}
+        </div>
+      `;
+    }
+
+    function onNodeClick(lessonIdx, isLocked) {
+      if (isLocked) {
+        playSound('error');
+        alert('🔒 Completa los niveles anteriores del caminito para desbloquear esta lección.');
+        return;
+      }
+      startLesson(lessonIdx);
+    }
+
+    function claimChest() {
+      playSound('correct');
+      xp += 25;
+      lives = Math.min(5, lives + 1);
+      updateStatsUI();
+      alert('🎁 ¡Abriste un Cofre de Recompensa! Recibiste +25 XP y +1 Vida ❤️');
+    }
+
+    function onBossNodeClick(isUnlocked) {
+      const totalLessons = currentWorld.lessons ? currentWorld.lessons.length : 10;
+      if (!isUnlocked) {
+        playSound('error');
+        alert(`🔒 Debes completar los ${totalLessons} niveles del caminito para enfrentarte al Desafío Final del Módulo.`);
+        return;
+      }
+      startBossChallenge();
+    }
+
+    function startLesson(lessonIdx) {
+      playSound('click');
+      currentLessonIndex = lessonIdx;
+      isLevelActive = true;
+      isBossMode = false;
+
+      const fullList = currentWorld.lessons[lessonIdx].exercises || [];
+      const limit = getQuestionLimit();
+      currentExercises = fullList.slice(0, Math.min(limit, fullList.length));
+      currentExerciseIndex = 0;
+
+      document.getElementById('pathView').style.display = 'none';
+      document.getElementById('exerciseHost').style.display = 'block';
+      document.getElementById('bottomBar').style.display = 'flex';
+
+      renderCurrentExercise();
+    }
+
+    function startBossChallenge() {
+      playSound('click');
+      isLevelActive = true;
+      isBossMode = true;
+      bossCorrectCount = 0;
+
+      const pool = [];
+      currentWorld.lessons.forEach(l => {
+        if (l.exercises && l.exercises.length > 1) {
+          pool.push(l.exercises[1]); // multiple choice
+          if (l.exercises.length > 3) pool.push(l.exercises[3]); // bug
+        }
+      });
+      currentExercises = pool.sort(() => Math.random() - 0.5).slice(0, 6);
+      currentExerciseIndex = 0;
+
+      document.getElementById('pathView').style.display = 'none';
+      document.getElementById('exerciseHost').style.display = 'block';
+      document.getElementById('bottomBar').style.display = 'flex';
+
+      renderCurrentExercise();
+    }
+
+    function renderCurrentExercise() {
+      const ex = currentExercises[currentExerciseIndex];
+      const host = document.getElementById('exerciseHost');
+      const progressBar = document.getElementById('progressBar');
+      const progressPercent = ((currentExerciseIndex + 1) / currentExercises.length) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+
+      resetBottomBar();
+
+      if (ex.type === 'FLASHCARD') {
+        host.innerHTML = `
+          <div class="exercise-type-tag" style="color: var(--blue)">💡 MICRO-TEORÍA NUCLEAR</div>
+          <div class="question-title">${ex.title}</div>
+          ${ex.codeSnippet ? `<div class="code-box">${escapeHtml(ex.codeSnippet)}</div>` : ''}
+          <div style="background: var(--surface); border: 1.5px solid var(--surface-border); border-radius: 16px; padding: 16px; line-height: 1.5; font-size: 14.5px;">
+            ${ex.explanation}
+          </div>
+        `;
+        setButtonState('¡ENTENDIDO!', false);
+      } else if (ex.type === 'MULTIPLE_CHOICE') {
+        selectedOptionIndex = null;
+        host.innerHTML = `
+          <div class="exercise-type-tag" style="color: var(--primary-green)">🎯 PREGUNTA CONCEPTUAL DE ENTREVISTA</div>
+          <div class="question-title">${ex.question}</div>
+          ${ex.codeSnippet ? `<div class="code-box">${escapeHtml(ex.codeSnippet)}</div>` : ''}
+          <div class="options-list">
+            ${ex.options.map((opt, i) => `
+              <div class="option-card" id="opt_${i}" onclick="selectOption(${i})">
+                <div class="pill-letter">${String.fromCharCode(65 + i)}</div>
+                <div class="option-text">${opt}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        setButtonState('COMPROBAR', true);
+      } else if (ex.type === 'TOKEN_REORDER') {
+        userOrderedTokens = [];
+        availableTokens = [...ex.tokens].sort(() => Math.random() - 0.5);
+        renderTokenReorderDOM(ex);
+      } else if (ex.type === 'SPOT_THE_BUG') {
+        selectedBugLineIndex = null;
+        host.innerHTML = `
+          <div class="exercise-type-tag" style="color: var(--error-red)">🐛 SPOT THE BUG (CODE INSPECTION)</div>
+          <div class="question-title">${ex.question}</div>
+          <div class="bug-inspector-box">
+            ${ex.codeLines.map((line, idx) => `
+              <div class="bug-line" id="bug_line_${idx}" onclick="selectBugLine(${idx})">
+                <div class="bug-line-number">${idx + 1}</div>
+                <div class="bug-line-text">${escapeHtml(line)}</div>
+                <div id="bug_icon_${idx}" style="display:none; color: var(--error-red); font-size: 16px;">🐛</div>
+              </div>
+            `).join('')}
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); text-align: center;">Toca la línea de código donde ocurrirá el fallo.</p>
+        `;
+        setButtonState('COMPROBAR', true);
+      }
+    }
+
+    function renderTokenReorderDOM(ex) {
+      const host = document.getElementById('exerciseHost');
+      host.innerHTML = `
+        <div class="exercise-type-tag" style="color: var(--purple)">🔤 PROGRAMACIÓN: ORDENA LA SINTAXIS</div>
+        <div class="question-title">${ex.question}</div>
+        <div class="token-target-box">
+          ${userOrderedTokens.length === 0
+            ? '<span style="color: var(--text-disabled); font-size: 14px;">Toca las palabras de abajo en orden para formar la sentencia...</span>'
+            : userOrderedTokens.map((tok, i) => `
+                <div class="token-selected" onclick="removeReorderToken(${i})">${tok} ✕</div>
+              `).join('')
+          }
+        </div>
+        <div style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 8px;">Banco de Palabras:</div>
+        <div class="chips-pool">
+          ${availableTokens.map((tok, i) => `
+            <button class="chip-btn" onclick="addReorderTokenByIndex(${i})">${escapeHtml(tok)}</button>
+          `).join('')}
+        </div>
+      `;
+      const isReady = userOrderedTokens.length === ex.correctOrder.length;
+      answerState = isReady ? 'ready' : 'unselected';
+      setButtonState('COMPROBAR', !isReady);
+    }
+
+    function addReorderTokenByIndex(index) {
+      if (answerState === 'correct' || answerState === 'incorrect') return;
+      playSound('click');
+      const token = availableTokens.splice(index, 1)[0];
+      userOrderedTokens.push(token);
+      renderTokenReorderDOM(currentExercises[currentExerciseIndex]);
+    }
+
+    function removeReorderToken(index) {
+      if (answerState === 'correct' || answerState === 'incorrect') return;
+      playSound('click');
+      const removed = userOrderedTokens.splice(index, 1)[0];
+      availableTokens.push(removed);
+      renderTokenReorderDOM(currentExercises[currentExerciseIndex]);
+    }
+
+    function selectOption(index) {
+      if (answerState === 'correct' || answerState === 'incorrect') return;
+      playSound('click');
+      selectedOptionIndex = index;
+      document.querySelectorAll('.option-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === index);
+      });
+      answerState = 'ready';
+      setButtonState('COMPROBAR', false);
+    }
+
+    function selectBugLine(index) {
+      if (answerState === 'correct' || answerState === 'incorrect') return;
+      playSound('click');
+      selectedBugLineIndex = index;
+      document.querySelectorAll('.bug-line').forEach((line, i) => {
+        const isSel = i === index;
+        line.classList.toggle('selected', isSel);
+        document.getElementById(`bug_icon_${i}`).style.display = isSel ? 'block' : 'none';
+      });
+      answerState = 'ready';
+      setButtonState('COMPROBAR', false);
+    }
+
+    let isAssistModeActive = false;
+
+    function handleActionClick() {
+      const ex = currentExercises[currentExerciseIndex];
+
+      if (ex.type === 'FLASHCARD' || answerState === 'correct') {
+        playSound('click');
+        advanceExercise();
+        return;
+      }
+
+      if (answerState === 'incorrect') {
+        // User clicked "SALTAR"
+        playSound('click');
+        advanceExercise();
+        return;
+      }
+
+      let isCorrect = false;
+      if (ex.type === 'MULTIPLE_CHOICE') {
+        isCorrect = selectedOptionIndex === ex.correctAnswerIndex;
+      } else if (ex.type === 'SPOT_THE_BUG') {
+        isCorrect = selectedBugLineIndex === ex.buggyLineIndex;
+      } else if (ex.type === 'TOKEN_REORDER') {
+        isCorrect = JSON.stringify(userOrderedTokens) === JSON.stringify(ex.correctOrder);
+      }
+
+      const bottomBar = document.getElementById('bottomBar');
+      const feedbackInfo = document.getElementById('feedbackInfo');
+      const feedbackTitle = document.getElementById('feedbackTitle');
+      const feedbackText = document.getElementById('feedbackText');
+      const actionBtn = document.getElementById('actionBtn');
+      const hintBtn = document.getElementById('retryHintBtn');
+
+      feedbackInfo.style.display = 'flex';
+
+      if (isCorrect) {
+        playSound('correct');
+        answerState = 'correct';
+        const earnedXp = isAssistModeActive ? 5 : 15;
+        xp += earnedXp;
+        if (!isAssistModeActive) {
+          streak += 1;
+        }
+        updateStatsUI();
+        bottomBar.className = 'bottom-bar correct';
+        feedbackTitle.innerHTML = isAssistModeActive
+          ? `<span style="color: var(--gold)">🌟</span> ¡Racha salvada! Ejercicio completado con asistencia (+5 XP)`
+          : `<span style="color: var(--primary-green)">✓</span> ¡Excelente respuesta técnica! (+15 XP)`;
+        feedbackTitle.style.color = isAssistModeActive ? 'var(--gold)' : 'var(--primary-green)';
+        feedbackText.textContent = ex.explanation;
+        if (hintBtn) hintBtn.style.display = 'none';
+        actionBtn.textContent = 'CONTINUAR';
+        actionBtn.className = 'primary-btn';
+        actionBtn.disabled = false;
+        actionBtn.style.flex = '1';
+      } else {
+        playSound('error');
+        answerState = 'incorrect';
+        lives = Math.max(0, lives - 1);
+        updateStatsUI();
+        bottomBar.className = 'bottom-bar incorrect';
+        feedbackTitle.innerHTML = `<span style="color: var(--error-red)">✕</span> Respuesta incorrecta`;
+        feedbackTitle.style.color = 'var(--error-red)';
+        feedbackText.textContent = ex.explanation;
+
+        // Mostrar opción para no perder la racha y resolver con pistas / semiterminado
+        if (hintBtn) {
+          hintBtn.style.display = 'block';
+          hintBtn.textContent = '💡 RESOLVER CON PISTAS (+5 XP)';
+        }
+        actionBtn.textContent = 'SALTAR';
+        actionBtn.className = 'primary-btn btn-error';
+        actionBtn.disabled = false;
+        actionBtn.style.flex = '1';
+      }
+    }
+
+    function activateAssistMode() {
+      playSound('click');
+      isAssistModeActive = true;
+      const ex = currentExercises[currentExerciseIndex];
+      const bottomBar = document.getElementById('bottomBar');
+      const feedbackInfo = document.getElementById('feedbackInfo');
+      const hintBtn = document.getElementById('retryHintBtn');
+      const actionBtn = document.getElementById('actionBtn');
+
+      bottomBar.className = 'bottom-bar';
+      feedbackInfo.style.display = 'none';
+      if (hintBtn) hintBtn.style.display = 'none';
+      actionBtn.className = 'primary-btn';
+      actionBtn.textContent = 'COMPROBAR';
+      actionBtn.disabled = true;
+      answerState = 'unselected';
+
+      const host = document.getElementById('exerciseHost');
+
+      if (ex.type === 'MULTIPLE_CHOICE') {
+        // 50/50: Descartar 2 opciones incorrectas
+        const wrongIndices = [];
+        ex.options.forEach((_, i) => {
+          if (i !== ex.correctAnswerIndex) wrongIndices.push(i);
+        });
+        const toEliminate = wrongIndices.sort(() => Math.random() - 0.5).slice(0, 2);
+        toEliminate.forEach(idx => {
+          const el = document.getElementById(`opt_${idx}`);
+          if (el) el.classList.add('eliminated');
+        });
+
+        let banner = host.querySelector('.assist-banner');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.className = 'assist-banner';
+          banner.innerHTML = `💡 <strong>Modo Asistencia 50/50:</strong> Hemos eliminado 2 opciones incorrectas para ayudarte a razonar la respuesta. ¡Elige entre las restantes para salvar tu racha!`;
+          host.insertBefore(banner, host.querySelector('.options-list'));
+        }
+        selectedOptionIndex = null;
+        document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+
+      } else if (ex.type === 'TOKEN_REORDER') {
+        // Semiterminado: Colocar primera mitad de tokens en orden
+        const total = ex.correctOrder.length;
+        const prefillCount = Math.max(1, Math.ceil(total * 0.55));
+        userOrderedTokens = ex.correctOrder.slice(0, prefillCount);
+        const remainingCorrect = ex.correctOrder.slice(prefillCount);
+        availableTokens = [...remainingCorrect].sort(() => Math.random() - 0.5);
+
+        renderTokenReorderDOM(ex);
+
+        let banner = host.querySelector('.assist-banner');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.className = 'assist-banner';
+          banner.innerHTML = `💡 <strong>Modo Semiterminado:</strong> Hemos colocado los primeros <strong>${prefillCount} de ${total}</strong> tokens en su orden sintáctico exacto. ¡Coloca los últimos tokens para completar la sentencia!`;
+          host.insertBefore(banner, host.querySelector('.token-target-box'));
+        }
+
+      } else if (ex.type === 'SPOT_THE_BUG') {
+        let banner = host.querySelector('.assist-banner');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.className = 'assist-banner';
+          const lineNum = ex.buggyLineIndex + 1;
+          const clue = ex.explanation 
+            ? (ex.explanation.length > 120 ? ex.explanation.substring(0, 115) + '...' : ex.explanation)
+            : `El fallo ocurre alrededor de la línea ${lineNum}.`;
+          banner.innerHTML = `💡 <strong>Pista del Compilador / Linter:</strong> Inspecciona de cerca la <strong>Línea ${lineNum}</strong>. Clave técnica: ${clue}`;
+          host.insertBefore(banner, host.querySelector('.bug-inspector-box'));
+        }
+        const lineEl = document.getElementById(`bug_line_${ex.buggyLineIndex}`);
+        if (lineEl) {
+          lineEl.style.borderColor = 'var(--gold)';
+          lineEl.style.backgroundColor = 'rgba(255, 200, 0, 0.12)';
+        }
+      }
+    }
+
+    function advanceExercise() {
+      if (currentExerciseIndex + 1 < currentExercises.length) {
+        currentExerciseIndex++;
+        renderCurrentExercise();
+      } else {
+        playSound('correct');
+        if (isBossMode) {
+          xp += 100;
+          updateStatsUI();
+          alert(`🏆 ¡ENHORABUENA! Has superado el Desafío Final del Módulo y sumado +100 XP. ¡Has dominado este mundo técnico y desbloqueado el siguiente!`);
+          const select = document.getElementById('worldSelect');
+          if (select.selectedIndex + 1 < select.options.length) {
+            select.selectedIndex++;
+            changeWorld(select.value);
+            return;
+          }
+        } else {
+          const earnedXp = 25 + (currentLessonIndex + 1) * 3;
+          xp += earnedXp;
+          const prevCompleted = userCompletedLevels[currentWorld.id] || 0;
+          if (currentLessonIndex + 1 > prevCompleted) {
+            userCompletedLevels[currentWorld.id] = currentLessonIndex + 1;
+            localStorage.setItem('java_play_completed_levels', JSON.stringify(userCompletedLevels));
+          }
+          updateStatsUI();
+          alert(`🎉 ¡Completaste el Nivel ${currentLessonIndex + 1}! Sumaste +${earnedXp} XP a tu perfil.`);
+        }
+        returnToPath();
+      }
+    }
+
+    function restartLesson() {
+      returnToPath();
+    }
+
+    function resetBottomBar() {
+      answerState = 'unselected';
+      isAssistModeActive = false;
+      const bottomBar = document.getElementById('bottomBar');
+      bottomBar.className = 'bottom-bar';
+      document.getElementById('feedbackInfo').style.display = 'none';
+      const hintBtn = document.getElementById('retryHintBtn');
+      if (hintBtn) hintBtn.style.display = 'none';
+      const btn = document.getElementById('actionBtn');
+      btn.className = 'primary-btn';
+      btn.style.flex = '1';
+    }
+
+    function setButtonState(text, disabled) {
+      const btn = document.getElementById('actionBtn');
+      btn.textContent = text;
+      btn.disabled = disabled;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function switchMainMode(mode) {
+      playSound('click');
+      document.getElementById('tabQuiz').classList.toggle('active', mode === 'quiz');
+      document.getElementById('tabSrs').classList.toggle('active', mode === 'srs');
+      document.getElementById('tabMock').classList.toggle('active', mode === 'mock');
+      document.getElementById('quizView').style.display = mode === 'quiz' ? 'block' : 'none';
+      document.getElementById('srsView').style.display = mode === 'srs' ? 'block' : 'none';
+      document.getElementById('mockView').style.display = mode === 'mock' ? 'block' : 'none';
+      document.getElementById('bottomBar').style.display = mode === 'quiz' ? 'flex' : 'none';
+      if (mode === 'srs') {
+        loadSrsData();
+      } else if (mode === 'mock') {
+        initMockInterview();
+      }
+    }
+
+    // ==============================================================
+    // FASE 3: SIMULADOR DE ENTREVISTAS CON IA Y SPEECH-TO-TEXT
+    // ==============================================================
+    let mockQuestionsList = [];
+    let currentMockQuestion = null;
+    let mockInputMode = 'voice'; // 'voice' or 'text'
+    let speechRecognitionInstance = null;
+    let speechTranscriptAccumulated = '';
+
+    async function initMockInterview() {
+      if (mockQuestionsList.length === 0) {
+        await loadMockQuestions();
+      }
+      resetMockUI();
+    }
+
+    async function loadMockQuestions() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/mock/questions`);
+        mockQuestionsList = await res.json();
+        
+        const sel = document.getElementById('mockQuestionSelect');
+        if (sel && mockQuestionsList.length > 0) {
+          sel.innerHTML = mockQuestionsList.map(q => `
+            <option value="${q.id}">[${q.category}] ${escapeHtml(q.title)}</option>
+          `).join('');
+          currentMockQuestion = mockQuestionsList[0];
+          renderMockQuestion(currentMockQuestion);
+        }
+      } catch (err) {
+        console.warn('Error loading mock questions:', err);
+      }
+    }
+
+    function selectMockQuestionById(qId) {
+      playSound('click');
+      const q = mockQuestionsList.find(item => item.id === qId);
+      if (q) {
+        currentMockQuestion = q;
+        renderMockQuestion(q);
+        resetMockUI();
+      }
+    }
+
+    function loadRandomMockQuestion() {
+      playSound('click');
+      if (mockQuestionsList.length <= 1) return;
+      let nextIdx;
+      do {
+        nextIdx = Math.floor(Math.random() * mockQuestionsList.length);
+      } while (mockQuestionsList[nextIdx].id === (currentMockQuestion ? currentMockQuestion.id : ''));
+      
+      currentMockQuestion = mockQuestionsList[nextIdx];
+      const sel = document.getElementById('mockQuestionSelect');
+      if (sel) sel.value = currentMockQuestion.id;
+      renderMockQuestion(currentMockQuestion);
+      resetMockUI();
+    }
+
+    function renderMockQuestion(q) {
+      if (!q) return;
+      document.getElementById('mockCategoryBadge').textContent = q.category;
+      document.getElementById('mockQuestionTitle').textContent = q.title;
+      document.getElementById('mockQuestionText').textContent = q.question;
+      document.getElementById('mockTimeLimitLabel').textContent = `${q.timeLimitSeconds || 60}s`;
+      document.getElementById('mockTimer').textContent = `${q.timeLimitSeconds || 60}s`;
+      mockSecondsLeft = q.timeLimitSeconds || 60;
+    }
+
+    function switchMockInputMode(mode) {
+      playSound('click');
+      mockInputMode = mode;
+      document.getElementById('modeVoiceBtn').classList.toggle('active', mode === 'voice');
+      document.getElementById('modeTextBtn').classList.toggle('active', mode === 'text');
+      document.getElementById('voicePanel').style.display = mode === 'voice' ? 'block' : 'none';
+      document.getElementById('textPanel').style.display = mode === 'text' ? 'block' : 'none';
+    }
+
+    function updateLiveTranscriptCount() {
+      const text = document.getElementById('liveTranscriptBox').innerText.trim();
+      const count = text ? text.split(/\s+/).length : 0;
+      document.getElementById('transcriptWordCount').textContent = `${count} palabras`;
+    }
+
+    function updateTextWordCount() {
+      const text = document.getElementById('mockTextInput').value.trim();
+      const count = text ? text.split(/\s+/).length : 0;
+      document.getElementById('textInputWordCount').textContent = `${count} palabras`;
+    }
+
+    function resetMockUI() {
+      clearInterval(mockTimerInterval);
+      if (speechRecognitionInstance) {
+        try { speechRecognitionInstance.stop(); } catch(e){}
+      }
+      isMockRecording = false;
+      speechTranscriptAccumulated = '';
+      
+      const recordBtn = document.getElementById('mockRecordBtn');
+      if (recordBtn) {
+        recordBtn.textContent = '🎙️ INICIAR RESPUESTA';
+        recordBtn.style.backgroundColor = 'var(--primary-green)';
+      }
+      document.getElementById('mockStatusText').textContent = 'Presiona el botón para comenzar a hablar. El sistema transcribirá tu voz en vivo.';
+      document.getElementById('audioWaveVisualizer').style.display = 'none';
+      document.getElementById('liveTranscriptBox').innerText = '';
+      document.getElementById('mockTextInput').value = '';
+      document.getElementById('transcriptWordCount').textContent = '0 palabras';
+      document.getElementById('textInputWordCount').textContent = '0 palabras';
+      document.getElementById('mockInputArea').style.display = 'block';
+      document.getElementById('mockEvaluationArea').style.display = 'none';
+      if (currentMockQuestion) {
+        mockSecondsLeft = currentMockQuestion.timeLimitSeconds || 60;
+        document.getElementById('mockTimer').textContent = `${mockSecondsLeft}s`;
+      }
+    }
+
+    function toggleMockRecording() {
+      const btn = document.getElementById('mockRecordBtn');
+      const timerDisplay = document.getElementById('mockTimer');
+      const statusText = document.getElementById('mockStatusText');
+      const wave = document.getElementById('audioWaveVisualizer');
+
+      if (!isMockRecording) {
+        playSound('click');
+        isMockRecording = true;
+        btn.textContent = '⏹️ TERMINAR Y EVALUAR';
+        btn.style.backgroundColor = 'var(--error-red)';
+        statusText.textContent = '🔴 Escuchando y transcribiendo en vivo... Habla con claridad.';
+        wave.style.display = 'flex';
+
+        // Initialize Web Speech API
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+          speechRecognitionInstance = new SpeechRec();
+          speechRecognitionInstance.continuous = true;
+          speechRecognitionInstance.interimResults = true;
+          speechRecognitionInstance.lang = 'es-ES';
+
+          speechRecognitionInstance.onresult = (event) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                speechTranscriptAccumulated += event.results[i][0].transcript + ' ';
+              } else {
+                interim += event.results[i][0].transcript;
+              }
+            }
+            const fullText = (speechTranscriptAccumulated + interim).trim();
+            const box = document.getElementById('liveTranscriptBox');
+            if (box) {
+              box.innerText = fullText;
+              updateLiveTranscriptCount();
+            }
+          };
+
+          speechRecognitionInstance.onerror = (e) => {
+            console.warn('Speech recognition error:', e.error);
+          };
+
+          try {
+            speechRecognitionInstance.start();
+          } catch(e) {}
+        } else {
+          statusText.textContent = '🎙️ Grabando audio (Dictado por voz nativo no soportado en este browser; puedes escribir o editar abajo).';
+        }
+
+        mockTimerInterval = setInterval(() => {
+          mockSecondsLeft--;
+          timerDisplay.textContent = `${mockSecondsLeft}s`;
+          if (mockSecondsLeft <= 0) {
+            stopMockRecording();
+          }
+        }, 1000);
+      } else {
+        stopMockRecording();
+      }
+    }
+
+    function stopMockRecording() {
+      clearInterval(mockTimerInterval);
+      if (speechRecognitionInstance) {
+        try { speechRecognitionInstance.stop(); } catch(e){}
+      }
+      isMockRecording = false;
+      playSound('click');
+      const btn = document.getElementById('mockRecordBtn');
+      if (btn) {
+        btn.textContent = '🎙️ REINICIAR GRABACIÓN';
+        btn.style.backgroundColor = 'var(--primary-green)';
+      }
+      document.getElementById('mockStatusText').textContent = '✅ Grabación detenida. Puedes revisar tu transcripción o presionar Evaluar con IA.';
+      document.getElementById('audioWaveVisualizer').style.display = 'none';
+      updateLiveTranscriptCount();
+    }
+
+    async function submitMockAnswer() {
+      playSound('click');
+      stopMockRecording();
+
+      let textToEvaluate = '';
+      if (mockInputMode === 'voice') {
+        textToEvaluate = document.getElementById('liveTranscriptBox').innerText.trim();
+      } else {
+        textToEvaluate = document.getElementById('mockTextInput').value.trim();
+      }
+
+      if (!textToEvaluate || textToEvaluate.length < 5) {
+        alert('⚠️ Por favor proporciona una respuesta (hablada o escrita) de al menos un enunciado para que la IA pueda evaluarla.');
+        return;
+      }
+
+      const evalBtn = document.getElementById('evaluateBtn');
+      evalBtn.disabled = true;
+      evalBtn.textContent = '🧠 ANALIZANDO RESPUESTA CON IA...';
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/mock/evaluate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'user_1',
+            questionId: currentMockQuestion ? currentMockQuestion.id : 'mock_spring_concurrency',
+            transcript: textToEvaluate,
+            durationSeconds: currentMockQuestion ? (currentMockQuestion.timeLimitSeconds - mockSecondsLeft) : 45
+          })
+        });
+
+        const data = await res.json();
+        evalBtn.disabled = false;
+        evalBtn.textContent = '🤖 EVALUAR RESPUESTA CON IA (+50 XP)';
+
+        if (data.evaluation) {
+          playSound('correct');
+          xp += 50;
+          updateStatsUI();
+          renderMockAiReport(data.evaluation);
+        }
+      } catch (err) {
+        evalBtn.disabled = false;
+        evalBtn.textContent = '🤖 EVALUAR RESPUESTA CON IA (+50 XP)';
+        alert('Error conectando con el evaluador de IA: ' + err.message);
+      }
+    }
+
+    function renderMockAiReport(ev) {
+      document.getElementById('mockInputArea').style.display = 'none';
+      const container = document.getElementById('mockEvaluationArea');
+      container.style.display = 'block';
+
+      // Badge color mapping
+      let badgeBg = 'rgba(88, 204, 2, 0.15)';
+      let badgeBorder = 'var(--primary-green)';
+      let badgeColor = 'var(--primary-green)';
+      if (ev.score >= 88) {
+        badgeBg = 'rgba(255, 200, 0, 0.18)';
+        badgeBorder = 'var(--gold)';
+        badgeColor = 'var(--gold)';
+      } else if (ev.score >= 75) {
+        badgeBg = 'rgba(28, 176, 246, 0.18)';
+        badgeBorder = 'var(--blue)';
+        badgeColor = 'var(--blue)';
+      } else if (ev.score < 55) {
+        badgeBg = 'rgba(255, 75, 75, 0.18)';
+        badgeBorder = 'var(--error-red)';
+        badgeColor = 'var(--error-red)';
+      }
+
+      container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #1C2333, #151822); border: 2px solid ${badgeBorder}; border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 16px;">
+          <!-- Score Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px;">CALIFICACIÓN GENERAL IA</div>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 38px; font-weight: 900; color: ${badgeColor}; font-family: 'JetBrains Mono', monospace;">${ev.score}%</span>
+                <span style="font-size: 12px; color: var(--text-secondary);">Score Ponderado</span>
+              </div>
+            </div>
+            <div style="background: ${badgeBg}; border: 1.5px solid ${badgeBorder}; color: ${badgeColor}; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 900; text-align: right;">
+              ${ev.verdictBadge}
+            </div>
+          </div>
+
+          <!-- 3-Axes Breakdown Bars -->
+          <div style="background: var(--surface); border-radius: 16px; padding: 14px; margin-bottom: 16px; border: 1px solid var(--surface-border);">
+            <div style="font-size: 11px; font-weight: 800; color: var(--gold); margin-bottom: 10px; letter-spacing: 0.8px;">DESGLOSE POR 3 EJES DE EVALUACIÓN:</div>
+            
+            <!-- Axis 1 -->
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
+                <span>🎯 Precisión Técnica</span>
+                <span style="color: var(--primary-green); font-family: monospace;">${ev.technicalScore}%</span>
+              </div>
+              <div class="axis-bar-container">
+                <div class="axis-bar-fill" style="width: ${ev.technicalScore}%; background: var(--primary-green);"></div>
+              </div>
+            </div>
+
+            <!-- Axis 2 -->
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
+                <span>🗣️ Estructura & Comunicación</span>
+                <span style="color: var(--blue); font-family: monospace;">${ev.communicationScore}%</span>
+              </div>
+              <div class="axis-bar-container">
+                <div class="axis-bar-fill" style="width: ${ev.communicationScore}%; background: var(--blue);"></div>
+              </div>
+            </div>
+
+            <!-- Axis 3 -->
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
+                <span>⚖️ Análisis de Trade-offs</span>
+                <span style="color: var(--orange); font-family: monospace;">${ev.tradeoffScore}%</span>
+              </div>
+              <div class="axis-bar-container">
+                <div class="axis-bar-fill" style="width: ${ev.tradeoffScore}%; background: var(--orange);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Concepts Checklist -->
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px;">CONCEPTOS DETECTADOS POR LA IA:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${(ev.conceptsCovered || []).map(c => `
+                <span style="background: rgba(88, 204, 2, 0.15); border: 1px solid var(--primary-green); color: var(--primary-green); font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 10px;">✅ ${escapeHtml(c)}</span>
+              `).join('')}
+              ${(ev.conceptsMissed || []).map(c => `
+                <span style="background: rgba(255, 75, 75, 0.12); border: 1px solid rgba(255, 75, 75, 0.4); color: #FFA0A0; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 10px;">⚠️ ${escapeHtml(c)}</span>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- AI Feedback -->
+          <div style="background: rgba(28, 176, 246, 0.08); border-left: 3px solid var(--blue); padding: 12px; border-radius: 10px; margin-bottom: 14px;">
+            <div style="font-size: 11px; font-weight: 800; color: var(--blue); margin-bottom: 4px;">FEEDBACK DEL ENTREVISTADOR:</div>
+            <div style="font-size: 13px; line-height: 1.45; color: rgba(255,255,255,0.92);">${escapeHtml(ev.feedback)}</div>
+          </div>
+
+          <!-- Senior Follow-up Question -->
+          ${ev.followUpQuestion ? `
+            <div style="background: rgba(255, 200, 0, 0.09); border: 1.5px solid rgba(255, 200, 0, 0.35); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+              <div style="font-size: 11px; font-weight: 900; color: var(--gold); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <span>⚡ REPREGUNTA DEL ENTREVISTADOR (FOLLOW-UP):</span>
+              </div>
+              <div style="font-size: 13px; line-height: 1.45; color: white; font-style: italic;">
+                "${escapeHtml(ev.followUpQuestion)}"
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Ideal Staff Response (collapsible) -->
+          <details style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: 14px; padding: 10px 14px; margin-bottom: 16px; cursor: pointer;">
+            <summary style="font-size: 12px; font-weight: 800; color: var(--primary-green); outline: none;">🏆 Ver Respuesta Benchmark de Referencia (Staff Architect)</summary>
+            <div style="margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: #ECEFF4; padding-top: 8px; border-top: 1px solid var(--surface-border);">
+              ${escapeHtml(ev.idealResponse || '')}
+            </div>
+          </details>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 10px;">
+            <button class="primary-btn" style="background: var(--surface); border: 1.5px solid var(--surface-border); color: white; flex: 1; font-size: 13px;" onclick="resetMockUI()">
+              🔄 OTRA VEZ
+            </button>
+            <button class="primary-btn" style="background: var(--primary-green); flex: 1.5; font-size: 13px;" onclick="loadRandomMockQuestion()">
+              🎲 SIGUIENTE PREGUNTA
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // FASE 2: ALGORITMO SM-2 & REPASO ESPACIADO
+    // ==========================================
+    let srsDueCards = [];
+    let srsCurrentIndex = 0;
+    let srsIsFlipped = false;
+
+    async function loadSrsData() {
+      try {
+        const statsRes = await fetch(`${BACKEND_URL}/srs/user_1/stats`);
+        const stats = await statsRes.json();
+        document.getElementById('srsRetentionRate').textContent = stats.retentionRate || '82%';
+        document.getElementById('srsEaseFactor').textContent = stats.avgEaseFactor || '2.51';
+        document.getElementById('srsStatDue').textContent = stats.dueToday || '0';
+        document.getElementById('srsDueBadge').textContent = stats.dueToday || '0';
+        document.getElementById('srsStatLearning').textContent = stats.learning || '0';
+        document.getElementById('srsStatMastered').textContent = stats.mastered || '0';
+
+        const dueRes = await fetch(`${BACKEND_URL}/srs/user_1/due`);
+        srsDueCards = await dueRes.json();
+        srsCurrentIndex = 0;
+        srsIsFlipped = false;
+        renderSrsCard();
+      } catch (err) {
+        console.warn('Error cargando datos de repaso SM-2:', err);
+      }
+    }
+
+    function renderSrsCard() {
+      const area = document.getElementById('srsCardArea');
+      if (!srsDueCards || srsCurrentIndex >= srsDueCards.length) {
+        area.innerHTML = `
+          <div style="background: var(--surface); border: 2px solid var(--surface-border); border-radius: 24px; padding: 28px; text-align: center;">
+            <div style="font-size: 54px; margin-bottom: 12px;">🎉</div>
+            <div style="font-size: 19px; font-weight: 900; color: white; margin-bottom: 8px;">¡Repaso Diario SM-2 Completado!</div>
+            <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 20px;">
+              Has transferido exitosamente los conceptos repasados a tu memoria de largo plazo según el algoritmo SM-2.
+            </p>
+            <button class="primary-btn" onclick="switchMainMode('quiz')">CONTINUAR ENTRENANDO EN NIVELES</button>
+          </div>
+        `;
+        return;
+      }
+
+      const item = srsDueCards[srsCurrentIndex];
+      const ex = item.exercise;
+      const title = ex ? (ex.title || ex.question) : 'Concepto Técnico';
+
+      area.innerHTML = `
+        <div style="background: var(--surface); border: 2px solid var(--surface-border); border-radius: 24px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <span style="background: rgba(206, 130, 255, 0.15); border: 1px solid var(--purple); color: var(--purple); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px;">
+              REPASO ${srsCurrentIndex + 1} DE ${srsDueCards.length}
+            </span>
+            <span style="font-size: 12px; color: var(--text-secondary);">Reps: ${item.repetitions} | Interv: ${item.interval_days}d</span>
+          </div>
+          <div style="font-size: 17px; font-weight: 800; line-height: 1.35; margin-bottom: 12px; color: white;">
+            ${escapeHtml(title)}
+          </div>
+          ${ex && ex.codeSnippet ? `<div class="code-box">${escapeHtml(ex.codeSnippet)}</div>` : ''}
+
+          ${!srsIsFlipped ? `
+            <button class="primary-btn" style="background-color: var(--blue); margin-top: 14px;" onclick="flipSrsCard()">
+              👁️ MOSTRAR RESPUESTA TÉCNICA
+            </button>
+          ` : `
+            <div style="background: var(--success-bg); border: 1.5px solid var(--success-border); border-radius: 16px; padding: 14px; margin-top: 14px; animation: popIn 0.2s ease;">
+              <div style="font-size: 11px; font-weight: 800; color: var(--primary-green); letter-spacing: 0.8px; margin-bottom: 4px;">💡 EXPLICACIÓN TÉCNICA</div>
+              <div style="font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,0.95);">${escapeHtml(ex ? ex.explanation : '')}</div>
+            </div>
+            <div style="text-align: center; font-size: 12.5px; color: var(--text-secondary); margin: 16px 0 10px 0; font-weight: 600;">
+              ¿Qué tan fácil fue recordar este concepto?
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <button class="primary-btn btn-error" style="padding: 10px 6px; font-size: 12px;" onclick="submitSrsReview(1)">
+                DIFÍCIL<br><span style="font-size: 10px; opacity: 0.85;">1 día</span>
+              </button>
+              <button class="primary-btn" style="background-color: var(--gold); color: #111; padding: 10px 6px; font-size: 12px;" onclick="submitSrsReview(3)">
+                BUENO<br><span style="font-size: 10px; opacity: 0.85;">~6 días</span>
+              </button>
+              <button class="primary-btn" style="padding: 10px 6px; font-size: 12px;" onclick="submitSrsReview(5)">
+                FÁCIL<br><span style="font-size: 10px; opacity: 0.85;">+16 días (+10 XP)</span>
+              </button>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function flipSrsCard() {
+      playSound('click');
+      srsIsFlipped = true;
+      renderSrsCard();
+    }
+
+    async function submitSrsReview(quality) {
+      const item = srsDueCards[srsCurrentIndex];
+      if (!item) return;
+
+      if (quality >= 3) {
+        playSound('correct');
+        xp += 10;
+        updateStatsUI();
+      } else {
+        playSound('error');
+      }
+
+      try {
+        await fetch(`${BACKEND_URL}/srs/user_1/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exerciseId: item.exercise_id,
+            worldId: item.world_id,
+            quality: quality
+          })
+        });
+      } catch (e) {}
+
+      srsCurrentIndex++;
+      srsIsFlipped = false;
+      renderSrsCard();
+      loadSrsData();
+    }
+
+    // Inicializar UI y precargar datos
+    updateStatsUI();
+    loadCurriculum();
+    loadSrsData();
+    loadMockQuestions();
+  </script>
+</body>
+</html>
