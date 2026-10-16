@@ -88,3 +88,21 @@ JavaPlay está configurado para utilizar **Play App Signing** de Google Play:
 1. **Upload Key (Clave de Carga):** El keystore generado en el paso 1 funciona como tu clave de carga. Al compilar con `flutter build appbundle --release`, firmas el paquete con esta clave.
 2. **App Signing Key (Clave de Firma de la App):** Al subir el `.aab` a Google Play Console, Google valida la firma con tu clave de carga, retira la firma de carga y firma los APKs distribuidos a los usuarios con la clave definitiva administrada por Google.
 3. **Beneficio crítico:** Si pierdes tu keystore local o tu equipo de desarrollo cambia, puedes solicitar un restablecimiento de la *Upload Key* a través de Google Play Console sin perder el paquete `com.neoarsenal.javaplay` ni la base de usuarios existente.
+
+---
+
+## 5. Deuda Técnica: Migración Futura a AGP 9 y Nuevo DSL
+
+En `android/gradle.properties` se encuentran configurados temporalmente:
+```properties
+android.builtInKotlin=false
+android.newDsl=false
+```
+
+### Contexto y Razón de Ser
+- **Puente Temporal:** Estos flags fueron incorporados por el migrador de Flutter para mantener la compatibilidad con el DSL tradicional de Gradle/AGP en `build.gradle` y permitir el salto seguro a Gradle `8.14.6` y AGP `8.13.2` para dar soporte a `compileSdk 36` sin romper la compatibilidad.
+- **Transición a AGP 9+:** A partir de AGP 9.0, Android Gradle Plugin requerirá obligatoriamente la nueva interfaz DSL declarativa (`newDsl`). Cuando todo el ecosistema de plugins esté adaptado, se deberá retirar `android.newDsl=false`.
+- **Plugins que bloquean o condicionan la migración:**
+  - `speech_to_text` (versión 6.6.1 fija en el proyecto) y plugins de audio que dependen de tareas de compilación de bajo nivel en Gradle clásico.
+  - Scripts de generación de recursos como `flutter_native_splash` y plugins de almacenamiento que requieren adaptarse completamente a las interfaces de transformación de artefactos de AGP 9.
+
