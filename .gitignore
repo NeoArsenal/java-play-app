@@ -37,3 +37,6 @@ Thumbs.db
 
 target/
 *.class
+
+# Internal docs (not for repo)
+docs_private/

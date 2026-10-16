@@ -1,5 +1,6 @@
 class InterviewQuestion {
   final String id;
+  final String worldId;
   final String title;
   final String question;
   final String category;
@@ -10,6 +11,7 @@ class InterviewQuestion {
 
   const InterviewQuestion({
     required this.id,
+    this.worldId = 'mundo_0',
     required this.title,
     required this.question,
     this.category = 'Java & Spring',
@@ -22,6 +24,7 @@ class InterviewQuestion {
   factory InterviewQuestion.fromJson(Map<String, dynamic> json) {
     return InterviewQuestion(
       id: json['id'] as String,
+      worldId: json['worldId'] as String? ?? 'mundo_0',
       title: json['title'] as String,
       question: json['question'] as String,
       category: json['category'] as String? ?? 'Java & Spring',

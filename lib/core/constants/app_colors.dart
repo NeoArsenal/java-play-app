@@ -22,6 +22,11 @@ class AppColors {
   static const Color duolingoPurple = Color(0xFFCE82FF);
   static const Color duolingoOrange = Color(0xFFFF9600);
   
+  static const Color gold = duolingoGold;
+  static const Color orange = duolingoOrange;
+  static const Color blue = duolingoBlue;
+  static const Color purple = duolingoPurple;
+  
   // Text Colors
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color(0xFFA0A2B0);
@@ -31,4 +36,5 @@ class AppColors {
   static const Color codeBackground = Color(0xFF0F1015);
   static const Color codeBorder = Color(0xFF2B2D3C);
   static const Color codeText = Color(0xFFFFC66D);
+  static const Color codeSyntaxKeyword = Color(0xFFCC7832);
 }

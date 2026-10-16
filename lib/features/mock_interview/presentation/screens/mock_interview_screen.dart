@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../domain/models/interview_question.dart';
+import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/features/mock_interview/domain/models/interview_question.dart';
 
 class MockInterviewScreen extends StatefulWidget {
   final InterviewQuestion question;

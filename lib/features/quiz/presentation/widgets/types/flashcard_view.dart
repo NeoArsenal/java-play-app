@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../quiz/domain/models/exercise.dart';
+import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 
 class FlashcardView extends StatelessWidget {
   final FlashcardExercise exercise;

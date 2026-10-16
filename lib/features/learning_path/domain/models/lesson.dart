@@ -1,4 +1,4 @@
-import '../../quiz/domain/models/exercise.dart';
+import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 
 class Lesson {
   final String id;

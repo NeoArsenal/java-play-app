@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../quiz/domain/models/exercise.dart';
+import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 
 class SpotTheBugView extends StatelessWidget {
   final SpotTheBugExercise exercise;

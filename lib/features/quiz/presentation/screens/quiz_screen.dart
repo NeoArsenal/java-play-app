@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../learning_path/domain/models/lesson.dart';
-import '../domain/models/exercise.dart';
+import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
+import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import '../controllers/quiz_controller.dart';
 import '../widgets/exercise_header.dart';
 import '../widgets/feedback_bottom_sheet.dart';
@@ -18,7 +18,7 @@ class QuizScreen extends ConsumerWidget {
   const QuizScreen({super.key, required this.lesson});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final quizState = ref.watch(quizProvider(lesson));
     final quizNotifier = ref.read(quizProvider(lesson).notifier);
 
@@ -37,6 +37,8 @@ class QuizScreen extends ConsumerWidget {
       appBar: ExerciseHeader(
         progress: quizState.progressRatio,
         lives: quizState.lives,
+        currentIndex: quizState.currentExerciseIndex + 1,
+        totalExercises: quizState.lesson.exercises.length,
         onClose: () => _confirmExit(context),
       ),
       body: SafeArea(
@@ -195,6 +197,15 @@ class QuizScreen extends ConsumerWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  "🎯 ${state.lesson.exercises.length} de ${state.lesson.exercises.length} preguntas superadas con éxito",
+                  style: const TextStyle(
+                    color: AppColors.primaryGreen,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Text(
                   "+${state.currentXp} XP ganados para tu preparación",
@@ -206,7 +217,7 @@ class QuizScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 36),
                 ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => Navigator.of(context).pop(true),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreen,
                     minimumSize: const Size(double.infinity, 54),

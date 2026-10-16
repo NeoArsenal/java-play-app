@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../domain/models/interview_question.dart';
 import '../domain/models/ai_evaluation_result.dart';
+import 'mock_interview_catalog.dart';
 
 class MockInterviewRepository {
   final String baseUrl;
   final http.Client client;
 
   MockInterviewRepository({
-    this.baseUrl = 'http://localhost:8080/api',
+    this.baseUrl = 'https://javaplay-app-btgxddftd2cxehhy.eastus2-01.azurewebsites.net/api',
     http.Client? client,
   }) : client = client ?? http.Client();
 
@@ -17,10 +18,12 @@ class MockInterviewRepository {
       final res = await client.get(Uri.parse('$baseUrl/mock/questions'));
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(utf8.decode(res.bodyBytes));
-        return list.map((item) => InterviewQuestion.fromJson(item as Map<String, dynamic>)).toList();
+        if (list.isNotEmpty) {
+          return list.map((item) => InterviewQuestion.fromJson(item as Map<String, dynamic>)).toList();
+        }
       }
     } catch (_) {}
-    return [];
+    return MockInterviewCatalog.allQuestions;
   }
 
   Future<AiEvaluationResult?> evaluateAnswer({

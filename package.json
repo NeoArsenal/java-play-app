@@ -1,11 +1,13 @@
-﻿{
-  name: java-play-app,
-  version: 1.0.0,
-  description: JavaPlay Full-Stack Monorepo,
-  main: backend/server.js,
-  scripts: {
-    start: node backend/server.js,
-    build: cd backend && npm install
+{
+  "name": "java-play-app",
+  "version": "1.0.0",
+  "description": "JavaPlay Full-Stack Monorepo",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "npm install"
   },
-  dependencies: {}
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
 }

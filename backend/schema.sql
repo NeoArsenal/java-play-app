@@ -79,13 +79,27 @@ CREATE TABLE IF NOT EXISTS public.srs_items (
     CONSTRAINT unique_user_srs UNIQUE (user_id, exercise_id)
 );
 
--- 7. Habilitar Row Level Security (RLS) recomendado en Supabase
+-- 7. Registro de Desafíos Finales de Mundos (Boss Battles en Supabase)
+CREATE TABLE IF NOT EXISTS public.boss_challenges (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(64) REFERENCES public.users(id) ON DELETE CASCADE,
+    world_id VARCHAR(64) NOT NULL,
+    boss_id VARCHAR(64) NOT NULL,
+    score INTEGER NOT NULL,
+    passed BOOLEAN NOT NULL DEFAULT TRUE,
+    xp_awarded INTEGER DEFAULT 150,
+    completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_world_boss UNIQUE (user_id, world_id)
+);
+
+-- 8. Habilitar Row Level Security (RLS) recomendado en Supabase
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.completed_exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mock_interview_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leaderboard ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.srs_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.boss_challenges ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de lectura y escritura pública para la API
 DROP POLICY IF EXISTS "Lectura pública de progreso" ON public.user_progress;
@@ -102,6 +116,9 @@ CREATE POLICY "Lectura pública de usuarios" ON public.users FOR SELECT USING (t
 
 DROP POLICY IF EXISTS "Acceso total a srs_items" ON public.srs_items;
 CREATE POLICY "Acceso total a srs_items" ON public.srs_items FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Acceso total a boss_challenges" ON public.boss_challenges;
+CREATE POLICY "Acceso total a boss_challenges" ON public.boss_challenges FOR ALL USING (true);
 
 -- Datos Semilla Iniciales
 INSERT INTO public.users (id, username, email) 

@@ -8,7 +8,7 @@ class SrsRepository {
   final http.Client client;
 
   SrsRepository({
-    this.baseUrl = 'http://localhost:8080/api',
+    this.baseUrl = 'https://javaplay-app-btgxddftd2cxehhy.eastus2-01.azurewebsites.net/api',
     http.Client? client,
   }) : client = client ?? http.Client();
 

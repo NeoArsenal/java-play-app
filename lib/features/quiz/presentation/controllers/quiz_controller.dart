@@ -163,8 +163,11 @@ class QuizNotifier extends StateNotifier<QuizState> {
     final ex = state.currentExercise as FillBlankExercise;
     if (state.filledBlanks.length >= ex.correctAnswers.length) return;
 
-    final newFilled = List<String>.from(state.filledBlanks)..add(token);
-    final newAvailable = List<String>.from(state.availableBlankOptions)..remove(token);
+    final trimmed = token.trim();
+    if (trimmed.isEmpty) return;
+
+    final newFilled = List<String>.from(state.filledBlanks)..add(trimmed);
+    final newAvailable = List<String>.from(state.availableBlankOptions)..remove(trimmed);
 
     final isReady = newFilled.length == ex.correctAnswers.length;
     state = state.copyWith(
@@ -180,7 +183,11 @@ class QuizNotifier extends StateNotifier<QuizState> {
 
     final removed = state.filledBlanks[index];
     final newFilled = List<String>.from(state.filledBlanks)..removeAt(index);
-    final newAvailable = List<String>.from(state.availableBlankOptions)..add(removed);
+    final ex = state.currentExercise as FillBlankExercise;
+    final newAvailable = List<String>.from(state.availableBlankOptions);
+    if (ex.options.contains(removed) && !newAvailable.contains(removed)) {
+      newAvailable.add(removed);
+    }
 
     state = state.copyWith(
       filledBlanks: newFilled,
@@ -237,7 +244,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       if (state.filledBlanks.length == ex.correctAnswers.length) {
         isCorrect = true;
         for (int i = 0; i < ex.correctAnswers.length; i++) {
-          if (state.filledBlanks[i] != ex.correctAnswers[i]) {
+          if (state.filledBlanks[i].trim().toLowerCase() != ex.correctAnswers[i].trim().toLowerCase()) {
             isCorrect = false;
             break;
           }
@@ -311,6 +318,16 @@ class QuizNotifier extends StateNotifier<QuizState> {
       state = state.copyWith(
         isAssistModeActive: true,
         assistHint: "💡 Pista del Compilador / Linter: Inspecciona de cerca la Línea $lineNum.",
+        answerStatus: AnswerStatus.unselected,
+      );
+    } else if (ex is FillBlankExercise) {
+      final wrongOptions = ex.options.where((opt) => !ex.correctAnswers.contains(opt)).toList()..shuffle();
+      final toRemove = wrongOptions.take(2).toList();
+      final remaining = List<String>.from(state.availableBlankOptions)..removeWhere((o) => toRemove.contains(o));
+      state = state.copyWith(
+        isAssistModeActive: true,
+        availableBlankOptions: remaining,
+        assistHint: "💡 Modo Asistencia: Descartamos 2 opciones incorrectas para ayudarte a completar el código.",
         answerStatus: AnswerStatus.unselected,
       );
     }

@@ -19,6 +19,17 @@ abstract class Exercise {
     required this.explanation,
   });
 
+  String get title {
+    if (this is FlashcardExercise) return (this as FlashcardExercise).title;
+    if (this is MultipleChoiceExercise) return (this as MultipleChoiceExercise).question;
+    if (this is FillBlankExercise) return (this as FillBlankExercise).question;
+    if (this is TokenReorderExercise) return (this as TokenReorderExercise).question;
+    if (this is SpotTheBugExercise) return (this as SpotTheBugExercise).question;
+    return id;
+  }
+
+  Map<String, dynamic> toJson() => {'id': id, 'type': type.name};
+
   factory Exercise.fromJson(Map<String, dynamic> json) {
     final typeStr = json['type'] as String;
     switch (typeStr) {
@@ -39,6 +50,7 @@ abstract class Exercise {
 }
 
 class FlashcardExercise extends Exercise {
+  @override
   final String title;
 
   const FlashcardExercise({
@@ -53,7 +65,7 @@ class FlashcardExercise extends Exercise {
       id: json['id'] as String,
       title: json['title'] as String,
       codeSnippet: json['codeSnippet'] as String?,
-      explanation: json['explanation'] as String,
+      explanation: json['explanation'] as String? ?? json['exp'] as String? ?? '',
     );
   }
 }
@@ -79,7 +91,7 @@ class MultipleChoiceExercise extends Exercise {
       options: List<String>.from(json['options'] as List),
       correctAnswerIndex: json['correctAnswerIndex'] as int,
       codeSnippet: json['codeSnippet'] as String?,
-      explanation: json['explanation'] as String,
+      explanation: json['explanation'] as String? ?? json['exp'] as String? ?? '',
     );
   }
 }
@@ -108,7 +120,7 @@ class FillBlankExercise extends Exercise {
       correctAnswers: List<String>.from(json['correctAnswers'] as List),
       options: List<String>.from(json['options'] as List),
       codeSnippet: json['codeSnippet'] as String?,
-      explanation: json['explanation'] as String,
+      explanation: json['explanation'] as String? ?? json['exp'] as String? ?? '',
     );
   }
 }
@@ -134,7 +146,7 @@ class TokenReorderExercise extends Exercise {
       tokens: List<String>.from(json['tokens'] as List),
       correctOrder: List<String>.from(json['correctOrder'] as List),
       codeSnippet: json['codeSnippet'] as String?,
-      explanation: json['explanation'] as String,
+      explanation: json['explanation'] as String? ?? json['exp'] as String? ?? '',
     );
   }
 }
@@ -160,7 +172,7 @@ class SpotTheBugExercise extends Exercise {
       codeLines: List<String>.from(json['codeLines'] as List),
       buggyLineIndex: json['buggyLineIndex'] as int,
       codeSnippet: json['codeSnippet'] as String?,
-      explanation: json['explanation'] as String,
+      explanation: json['explanation'] as String? ?? json['exp'] as String? ?? '',
     );
   }
 }
