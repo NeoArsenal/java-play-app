@@ -1,4 +1,4 @@
-package com.example.java_play_app
+package com.neoarsenal.javaplay
 
 import io.flutter.embedding.android.FlutterActivity
 
