@@ -109,6 +109,43 @@ graph TD
 
 ---
 
-## 🚀 Próximo Paso Inmediato Recomendado
+### Fase 5: Gamificación Avanzada, Economía y Efectos Sensoriales
+> **Objetivo**: Máxima retención diaria, recompensas emocionales y pulido audiovisual de clase mundial.
 
-Podemos comenzar implementando el **ejercicio "Spot the Bug" (tocar la línea con error)** y la **persistencia local del progreso**, o enriquecer el prototipo con el catálogo completo de los 10 mundos.
+- [ ] **Tienda de Ítems (Gems Economy)**:
+  * **Streak Freeze (Protector de Racha)**: Escudo que se activa automáticamente si el usuario no ingresa un día, salvando su récord.
+  * **Recarga de Vidas**: Compra de corazones con gemas acumuladas al responder correctamente.
+  * **Personalización & Cosméticos**: Insignias especiales, títulos para el perfil y skins de programador.
+- [ ] **Efectos Audiovisuales & Feedback Háptico**:
+  * Sonidos satisfactorios estilo Duolingo en aciertos, errores y fanfarria al derrotar jefes.
+  * Explosión de confeti animada al subir de nivel o completar un mundo.
+  * Vibración háptica en dispositivos móviles al seleccionar o enviar respuestas.
+- [ ] **Modo Contrarreloj "JVM Heap Survival"**:
+  * Simulación visual del Heap de memoria llenándose con objetos segundo a segundo.
+  * Cada respuesta correcta ejecuta un *Garbage Collection (GC)* liberando memoria; cada fallo o demora acelera la llegada del `OutOfMemoryError`.
+
+---
+
+### Fase 6: ☕ "Java Action Sim: El Algoritmo Vivo" (Simulador Causa-Efecto)
+> **Objetivo**: Transformar el aprendizaje de código en una experiencia interactiva donde cada instrucción Java hace que un personaje realice acciones físicas en pantalla.
+
+- [ ] **Mecánica Central (Programación Visual Orientada a Objetos)**:
+  * El usuario no solo responde preguntas teóricas: **ensambla o escribe instrucciones Java** para que el personaje (Duke o el Dev) interactúe con el entorno (ej. preparar café, despachar pedidos, coordinar hilos).
+  * **Ejecución Línea por Línea (Visual Debugger)**: Al pulsar "▶️ EJECUTAR", el código se va resaltando instrucción por instrucción y el personaje ejecuta la acción en tiempo real con animaciones fluidas (Lottie / Canvas).
+- [ ] **Feedback Visual con Humor Técnico de Java**:
+  * Si el código es correcto: El personaje completa la tarea con éxito (ej. café humeante servido, hilo sincronizado).
+  * **`NullPointerException`**: El personaje intenta agarrar un objeto inexistente (`taza = null`) y se le cae al piso con sonido de vidrio rompiéndose.
+  * **`StackOverflowError`**: El personaje entra en un bucle recursivo infinito sirviendo tazas una dentro de otra hasta saturar la cocina.
+  * **`Deadlock`**: Dos personajes intentan tomar la cafetera y la taza al mismo tiempo con bloqueos cruzados y se quedan congelados mirándose.
+  * **`ArrayIndexOutOfBoundsException`**: El personaje intenta colocar una taza en `bandeja[5]` cuando la bandeja solo tiene 3 ranuras, cayéndose al vacío.
+- [ ] **Entornos Progresivos**:
+  * **Mundo 1 (Fundamentos)**: *La Cafetería JVM* (instanciación, llamadas a métodos `calentar()`, `moler()`, `servir()`).
+  * **Mundo 2 (Colecciones & Loops)**: *El Almacén de Despacho* (`for-each`, `List.add()`, filtrado con Streams).
+  * **Mundo 3 (Multithreading)**: *La Cocina Concurrente* (sección crítica con `synchronized`, `ReentrantLock` y evitar condiciones de carrera).
+
+---
+
+## 🚀 Próximos Pasos Disponibles para Desarrollo Inmediato
+1. **Implementar "Java Action Sim: La Cafetería JVM"**: Crear el primer micro-escenario visual donde el código del usuario controla físicamente al personaje paso a paso con animaciones.
+2. **Tienda de Gemas & Protector de Racha (Streak Freeze)**.
+3. **Efectos de Audio, Háptica y Confeti**.
