@@ -12,7 +12,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
   http: ^1.2.2
   shared_preferences: ^2.2.3
-  speech_to_text: 6.6.1
+  speech_to_text: ^7.5.0
 
 dev_dependencies:
   flutter_test:
