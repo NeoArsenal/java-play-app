@@ -48,10 +48,12 @@ class FeedbackBottomSheet extends StatelessWidget {
       }
     }
 
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomPadding),
       decoration: BoxDecoration(
         color: barBackground,
         border: Border(

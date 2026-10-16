@@ -773,19 +773,22 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
       appBar: _buildTopGamificationBar(),
       body: currentWorld == null
           ? const Center(child: Text("Cargando datos...", style: TextStyle(color: Colors.white)))
-          : Column(
-              children: [
-                // Selector de Mundos (0 al 10)
-                _buildWorldSelectorBar(),
+          : SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  // Selector de Mundos (0 al 10)
+                  _buildWorldSelectorBar(),
 
-                // Pestañas Superiores de Modo (Lecciones, Repaso SM-2, Mock Interview)
-                _buildModeSwitcher(),
+                  // Pestañas Superiores de Modo (Lecciones, Repaso SM-2, Mock Interview)
+                  _buildModeSwitcher(),
 
-                // Contenido dinámico según la pestaña activa
-                Expanded(
-                  child: _buildCurrentTabContent(currentWorld),
-                ),
-              ],
+                  // Contenido dinámico según la pestaña activa
+                  Expanded(
+                    child: _buildCurrentTabContent(currentWorld),
+                  ),
+                ],
+              ),
             ),
     );
   }

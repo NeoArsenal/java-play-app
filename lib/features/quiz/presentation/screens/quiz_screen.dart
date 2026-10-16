@@ -32,31 +32,38 @@ class QuizScreen extends ConsumerWidget {
 
     final currentExercise = quizState.currentExercise;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: ExerciseHeader(
-        progress: quizState.progressRatio,
-        lives: quizState.lives,
-        currentIndex: quizState.currentExerciseIndex + 1,
-        totalExercises: quizState.lesson.exercises.length,
-        onClose: () => _confirmExit(context),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: _buildExerciseBody(currentExercise, quizState, quizNotifier),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _confirmExit(context);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: ExerciseHeader(
+          progress: quizState.progressRatio,
+          lives: quizState.lives,
+          currentIndex: quizState.currentExerciseIndex + 1,
+          totalExercises: quizState.lesson.exercises.length,
+          onClose: () => _confirmExit(context),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: _buildExerciseBody(currentExercise, quizState, quizNotifier),
+                ),
               ),
-            ),
-            FeedbackBottomSheet(
-              state: quizState,
-              onVerify: () => quizNotifier.verifyAnswer(),
-              onContinue: () => quizNotifier.proceedToNext(),
-              onAssist: () => quizNotifier.activateAssistMode(),
-            ),
-          ],
+              FeedbackBottomSheet(
+                state: quizState,
+                onVerify: () => quizNotifier.verifyAnswer(),
+                onContinue: () => quizNotifier.proceedToNext(),
+                onAssist: () => quizNotifier.activateAssistMode(),
+              ),
+            ],
+          ),
         ),
       ),
     );

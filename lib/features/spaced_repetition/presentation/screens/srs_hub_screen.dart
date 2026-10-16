@@ -28,24 +28,26 @@ class SrsHubScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: srsState.isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildRetentionBanner(srsState.stats),
-                  const SizedBox(height: 18),
-                  if (srsState.isSessionCompleted)
-                    _buildCompletedSessionView(srsState, srsNotifier)
-                  else if (srsState.currentCard != null)
-                    _buildActiveCardReview(srsState, srsNotifier)
-                  else
-                    _buildEmptyQueueView(srsNotifier),
-                ],
+      body: SafeArea(
+        child: srsState.isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildRetentionBanner(srsState.stats),
+                    const SizedBox(height: 18),
+                    if (srsState.isSessionCompleted)
+                      _buildCompletedSessionView(srsState, srsNotifier)
+                    else if (srsState.currentCard != null)
+                      _buildActiveCardReview(srsState, srsNotifier)
+                    else
+                      _buildEmptyQueueView(srsNotifier),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

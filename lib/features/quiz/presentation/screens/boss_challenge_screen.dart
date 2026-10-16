@@ -247,21 +247,29 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
 
     final currentExercise = _exercises[_currentIndex];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F1017),
-      appBar: _buildBossAppBar(),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildBossBattleHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: _buildCurrentExerciseView(currentExercise),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _confirmExit(context);
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0F1017),
+        appBar: _buildBossAppBar(),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _buildBossBattleHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: _buildCurrentExerciseView(currentExercise),
+                ),
               ),
-            ),
-            _buildActionBottomBar(currentExercise),
-          ],
+              _buildActionBottomBar(currentExercise),
+            ],
+          ),
         ),
       ),
     );
@@ -527,8 +535,9 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
   }
 
   Widget _buildActionBottomBar(Exercise currentExercise) {
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
       decoration: BoxDecoration(
         color: _isVerified
             ? (_wasLastCorrect ? const Color(0xFF14301B) : const Color(0xFF381519))
