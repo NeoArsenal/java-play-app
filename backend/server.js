@@ -1018,6 +1018,65 @@ setInterval(() => {
   }
 }, 600000).unref();
 
+// ==============================================================
+// 5. LECTURA SEGURA DE BODY (LÍMITE 100 KB)
+// ==============================================================
+
+const MAX_BODY_SIZE = 100 * 1024; // 100 KB
+
+function readJsonBody(req, res) {
+  return new Promise((resolve) => {
+    const contentLength = parseInt(req.headers['content-length'] || '0', 10);
+    if (contentLength > MAX_BODY_SIZE) {
+      sendJson(res, 413, {
+        error: 'Payload Too Large',
+        message: 'El cuerpo de la petición excede el límite permitido de 100 KB'
+      }, req);
+      return resolve(null);
+    }
+
+    let body = '';
+    let currentLength = 0;
+
+    req.on('data', chunk => {
+      currentLength += chunk.length;
+      if (currentLength > MAX_BODY_SIZE) {
+        req.destroy();
+        if (!res.headersSent) {
+          sendJson(res, 413, {
+            error: 'Payload Too Large',
+            message: 'El cuerpo de la petición excede el límite permitido de 100 KB'
+          }, req);
+        }
+        return resolve(null);
+      }
+      body += chunk;
+    });
+
+    req.on('end', () => {
+      if (res.headersSent) return resolve(null);
+      if (!body.trim()) return resolve({});
+      try {
+        const parsed = JSON.parse(body);
+        resolve(parsed);
+      } catch (err) {
+        sendJson(res, 400, {
+          error: 'Bad Request',
+          message: 'JSON con formato inválido'
+        }, req);
+        resolve(null);
+      }
+    });
+
+    req.on('error', () => {
+      if (!res.headersSent) {
+        sendJson(res, 400, { error: 'Bad Request', message: 'Error en la transmisión de datos' }, req);
+      }
+      resolve(null);
+    });
+  });
+}
+
 function readCurriculum() {
   try {
     const raw = fs.readFileSync(CURRICULUM_PATH, 'utf8');
@@ -1196,108 +1255,102 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
     }
 
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
+    const payload = await readJsonBody(req, res);
+    if (payload === null) return;
 
-        if (payload.xpDelta !== undefined) {
-          if (!Number.isInteger(payload.xpDelta) || payload.xpDelta < 0 || payload.xpDelta > 1000) {
-            return sendJson(res, 400, { error: 'Bad Request', message: 'xpDelta debe ser un entero entre 0 y 1000' });
-          }
+    try {
+      if (payload.xpDelta !== undefined) {
+        if (!Number.isInteger(payload.xpDelta) || payload.xpDelta < 0 || payload.xpDelta > 1000) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'xpDelta debe ser un entero entre 0 y 1000' });
         }
-        if (payload.lives !== undefined && (!Number.isInteger(payload.lives) || payload.lives < 0 || payload.lives > 5)) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'lives debe ser un entero entre 0 y 5' });
-        }
-        if (payload.streak !== undefined && (!Number.isInteger(payload.streak) || payload.streak < 0 || payload.streak > 100000)) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'streak debe ser un entero no negativo' });
-        }
-
-        const user = memDb.users[userId] || { id: userId, name: 'Alonso', xp: 180, lives: 5, streak: 3, completedLessons: [] };
-
-        if (payload.xpDelta) user.xp += payload.xpDelta;
-        if (payload.lives !== undefined) user.lives = Math.max(0, Math.min(5, payload.lives));
-        if (payload.streak !== undefined) user.streak = payload.streak;
-
-        memDb.users[userId] = user;
-
-        if (pool) {
-          try {
-            await pool.query(`
-              INSERT INTO user_progress (user_id, xp, lives, streak, updated_at)
-              VALUES ($1, $2, $3, $4, NOW())
-              ON CONFLICT (user_id) 
-              DO UPDATE SET xp = $2, lives = $3, streak = $4, updated_at = NOW()
-            `, [userId, user.xp, user.lives, user.streak]);
-          } catch (dbErr) {
-            console.warn('Error saving to Postgres:', dbErr.message);
-          }
-        }
-
-        // Update Leaderboard
-        const me = memDb.leaderboard.find(u => u.name.includes('Alonso'));
-        if (me) me.xp = user.xp;
-        memDb.leaderboard.sort((a, b) => b.xp - a.xp);
-        memDb.leaderboard.forEach((u, i) => u.rank = i + 1);
-
-        return sendJson(res, 200, { success: true, user });
-      } catch (err) {
-        return sendJson(res, 400, { error: 'Bad Request', message: 'Cuerpo de la petición inválido' });
       }
-    });
-    return;
+      if (payload.lives !== undefined && (!Number.isInteger(payload.lives) || payload.lives < 0 || payload.lives > 5)) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'lives debe ser un entero entre 0 y 5' });
+      }
+      if (payload.streak !== undefined && (!Number.isInteger(payload.streak) || payload.streak < 0 || payload.streak > 100000)) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'streak debe ser un entero no negativo' });
+      }
+
+      const user = memDb.users[userId] || { id: userId, name: 'Alonso', xp: 180, lives: 5, streak: 3, completedLessons: [] };
+
+      if (payload.xpDelta) user.xp += payload.xpDelta;
+      if (payload.lives !== undefined) user.lives = Math.max(0, Math.min(5, payload.lives));
+      if (payload.streak !== undefined) user.streak = payload.streak;
+
+      memDb.users[userId] = user;
+
+      if (pool) {
+        try {
+          await pool.query(`
+            INSERT INTO user_progress (user_id, xp, lives, streak, updated_at)
+            VALUES ($1, $2, $3, $4, NOW())
+            ON CONFLICT (user_id) 
+            DO UPDATE SET xp = $2, lives = $3, streak = $4, updated_at = NOW()
+          `, [userId, user.xp, user.lives, user.streak]);
+        } catch (dbErr) {
+          console.warn('Error saving to Postgres:', dbErr.message);
+        }
+      }
+
+      // Update Leaderboard
+      const me = memDb.leaderboard.find(u => u.name.includes('Alonso'));
+      if (me) me.xp = user.xp;
+      memDb.leaderboard.sort((a, b) => b.xp - a.xp);
+      memDb.leaderboard.forEach((u, i) => u.rank = i + 1);
+
+      return sendJson(res, 200, { success: true, user });
+    } catch (err) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Cuerpo de la petición inválido' });
+    }
   }
 
   // 6. POST Verify Exercise Answer
   if (req.method === 'POST' && url.pathname === '/api/verify') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      try {
-        const { exerciseId, answer } = JSON.parse(body || '{}');
-        const curriculum = readCurriculum();
-        let targetEx = null;
+    const payload = await readJsonBody(req, res);
+    if (payload === null) return;
 
-        for (const world of curriculum.worlds) {
-          for (const lesson of world.lessons) {
-            for (const ex of lesson.exercises) {
-              if (ex.id === exerciseId) {
-                targetEx = ex;
-                break;
-              }
+    try {
+      const { exerciseId, answer } = payload;
+      const curriculum = readCurriculum();
+      let targetEx = null;
+
+      for (const world of curriculum.worlds) {
+        for (const lesson of world.lessons) {
+          for (const ex of lesson.exercises) {
+            if (ex.id === exerciseId) {
+              targetEx = ex;
+              break;
             }
           }
         }
-
-        if (!targetEx) {
-          return sendJson(res, 404, { error: 'Ejercicio no encontrado' });
-        }
-
-        let isCorrect = false;
-        if (targetEx.type === 'FLASHCARD') {
-          isCorrect = true;
-        } else if (targetEx.type === 'MULTIPLE_CHOICE') {
-          isCorrect = answer === targetEx.correctAnswerIndex;
-        } else if (targetEx.type === 'SPOT_THE_BUG') {
-          isCorrect = answer === targetEx.buggyLineIndex;
-        } else if (targetEx.type === 'TOKEN_REORDER') {
-          isCorrect = JSON.stringify(answer) === JSON.stringify(targetEx.correctOrder);
-        } else if (targetEx.type === 'FILL_BLANK') {
-          isCorrect = JSON.stringify(answer) === JSON.stringify(targetEx.correctAnswers);
-        }
-
-        return sendJson(res, 200, {
-          exerciseId,
-          isCorrect,
-          explanation: targetEx.explanation,
-          xpEarned: isCorrect ? 15 : 0
-        });
-      } catch (err) {
-        return sendJson(res, 400, { error: 'Invalid request' });
       }
-    });
-    return;
+
+      if (!targetEx) {
+        return sendJson(res, 404, { error: 'Not Found', message: 'Ejercicio no encontrado' });
+      }
+
+      let isCorrect = false;
+      if (targetEx.type === 'FLASHCARD') {
+        isCorrect = true;
+      } else if (targetEx.type === 'MULTIPLE_CHOICE') {
+        isCorrect = answer === targetEx.correctAnswerIndex;
+      } else if (targetEx.type === 'SPOT_THE_BUG') {
+        isCorrect = answer === targetEx.buggyLineIndex;
+      } else if (targetEx.type === 'TOKEN_REORDER') {
+        isCorrect = JSON.stringify(answer) === JSON.stringify(targetEx.correctOrder);
+      } else if (targetEx.type === 'FILL_BLANK') {
+        isCorrect = JSON.stringify(answer) === JSON.stringify(targetEx.correctAnswers);
+      }
+
+      return sendJson(res, 200, {
+        exerciseId,
+        isCorrect,
+        explanation: targetEx.explanation,
+        xpEarned: isCorrect ? 15 : 0
+      });
+    } catch (err) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Petición de verificación inválida' });
+    }
   }
 
   // 7. GET /api/srs/:userId/due - Ejercicios pendientes para repaso hoy según SM-2
@@ -1356,106 +1409,104 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
     }
 
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const { exerciseId, worldId, quality } = JSON.parse(body || '{}');
+    const payload = await readJsonBody(req, res);
+    if (payload === null) return;
 
-        // Validar quality (entero 0 a 5)
-        if (quality === undefined || !Number.isInteger(quality) || quality < 0 || quality > 5) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'quality debe ser un número entero entre 0 y 5' });
-        }
+    try {
+      const { exerciseId, worldId, quality } = payload;
 
-        // Validar exerciseId (cadena no vacía de hasta 64 caracteres)
-        if (!exerciseId || typeof exerciseId !== 'string' || exerciseId.trim().length === 0 || exerciseId.length > 64) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'exerciseId debe ser una cadena no vacía de hasta 64 caracteres' });
-        }
-
-        const q = quality;
-
-        let existingItem = null;
-        if (pool) {
-          try {
-            const { rows } = await pool.query(
-              'SELECT * FROM srs_items WHERE user_id = $1 AND exercise_id = $2',
-              [userId, exerciseId]
-            );
-            if (rows.length > 0) existingItem = rows[0];
-          } catch (e) {
-            console.warn('DB check srs_item error:', e.message);
-          }
-        }
-
-        if (!existingItem) {
-          existingItem = (memDb.srs_items || []).find(i => i.user_id === userId && i.exercise_id === exerciseId) || {
-            user_id: userId,
-            exercise_id: exerciseId,
-            world_id: worldId || 'nivel_0',
-            repetitions: 0,
-            interval_days: 1,
-            ease_factor: 2.50
-          };
-        }
-
-        // Ejecutar Algoritmo SM-2
-        const sm2Result = calculateSM2(existingItem, q);
-        const srsId = `${userId}:${exerciseId}`;
-
-        if (pool) {
-          try {
-            await pool.query(`
-              INSERT INTO srs_items (id, user_id, exercise_id, world_id, repetitions, interval_days, ease_factor, last_quality, next_review_at, last_reviewed_at)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-              ON CONFLICT (id) DO UPDATE SET
-                repetitions = $5,
-                interval_days = $6,
-                ease_factor = $7,
-                last_quality = $8,
-                next_review_at = $9,
-                last_reviewed_at = $10
-            `, [
-              srsId,
-              userId,
-              exerciseId,
-              worldId || existingItem.world_id || 'nivel_0',
-              sm2Result.repetitions,
-              sm2Result.interval_days,
-              sm2Result.ease_factor,
-              sm2Result.last_quality,
-              sm2Result.next_review_at,
-              sm2Result.last_reviewed_at
-            ]);
-
-            // Sumar +10 XP de repaso espaciado
-            await pool.query(`
-              UPDATE user_progress SET xp = xp + 10, updated_at = NOW() WHERE user_id = $1
-            `, [userId]);
-          } catch (dbErr) {
-            console.warn('DB error saving SM-2 item:', dbErr.message);
-          }
-        }
-
-        // Actualizar en memoria
-        if (!memDb.srs_items) memDb.srs_items = [];
-        const memIdx = memDb.srs_items.findIndex(i => i.id === srsId);
-        const updatedMem = { id: srsId, user_id: userId, exercise_id: exerciseId, world_id: worldId || 'nivel_0', ...sm2Result };
-        if (memIdx >= 0) memDb.srs_items[memIdx] = updatedMem;
-        else memDb.srs_items.push(updatedMem);
-
-        if (memDb.users[userId]) memDb.users[userId].xp += 10;
-
-        return sendJson(res, 200, {
-          success: true,
-          message: 'Repaso SM-2 procesado exitosamente',
-          sm2: sm2Result,
-          xpGained: 10
-        });
-      } catch (err) {
-        return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando solicitud de repaso SM-2' });
+      // Validar quality (entero 0 a 5)
+      if (quality === undefined || !Number.isInteger(quality) || quality < 0 || quality > 5) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'quality debe ser un número entero entre 0 y 5' });
       }
-    });
-    return;
+
+      // Validar exerciseId (cadena no vacía de hasta 64 caracteres)
+      if (!exerciseId || typeof exerciseId !== 'string' || exerciseId.trim().length === 0 || exerciseId.length > 64) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'exerciseId debe ser una cadena no vacía de hasta 64 caracteres' });
+      }
+
+      const q = quality;
+
+      let existingItem = null;
+      if (pool) {
+        try {
+          const { rows } = await pool.query(
+            'SELECT * FROM srs_items WHERE user_id = $1 AND exercise_id = $2',
+            [userId, exerciseId]
+          );
+          if (rows.length > 0) existingItem = rows[0];
+        } catch (e) {
+          console.warn('DB check srs_item error:', e.message);
+        }
+      }
+
+      if (!existingItem) {
+        existingItem = (memDb.srs_items || []).find(i => i.user_id === userId && i.exercise_id === exerciseId) || {
+          user_id: userId,
+          exercise_id: exerciseId,
+          world_id: worldId || 'nivel_0',
+          repetitions: 0,
+          interval_days: 1,
+          ease_factor: 2.50
+        };
+      }
+
+      // Ejecutar Algoritmo SM-2
+      const sm2Result = calculateSM2(existingItem, q);
+      const srsId = `${userId}:${exerciseId}`;
+
+      if (pool) {
+        try {
+          await pool.query(`
+            INSERT INTO srs_items (id, user_id, exercise_id, world_id, repetitions, interval_days, ease_factor, last_quality, next_review_at, last_reviewed_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ON CONFLICT (id) DO UPDATE SET
+              repetitions = $5,
+              interval_days = $6,
+              ease_factor = $7,
+              last_quality = $8,
+              next_review_at = $9,
+              last_reviewed_at = $10
+          `, [
+            srsId,
+            userId,
+            exerciseId,
+            worldId || existingItem.world_id || 'nivel_0',
+            sm2Result.repetitions,
+            sm2Result.interval_days,
+            sm2Result.ease_factor,
+            sm2Result.last_quality,
+            sm2Result.next_review_at,
+            sm2Result.last_reviewed_at
+          ]);
+
+          // Sumar +10 XP de repaso espaciado
+          await pool.query(`
+            UPDATE user_progress SET xp = xp + 10, updated_at = NOW() WHERE user_id = $1
+          `, [userId]);
+        } catch (dbErr) {
+          console.warn('DB error saving SM-2 item:', dbErr.message);
+        }
+      }
+
+      // Actualizar en memoria
+      if (!memDb.srs_items) memDb.srs_items = [];
+      const memIdx = memDb.srs_items.findIndex(i => i.id === srsId);
+      const updatedMem = { id: srsId, user_id: userId, exercise_id: exerciseId, world_id: worldId || 'nivel_0', ...sm2Result };
+      if (memIdx >= 0) memDb.srs_items[memIdx] = updatedMem;
+      else memDb.srs_items.push(updatedMem);
+
+      if (memDb.users[userId]) memDb.users[userId].xp += 10;
+
+      return sendJson(res, 200, {
+        success: true,
+        message: 'Repaso SM-2 procesado exitosamente',
+        sm2: sm2Result,
+        xpGained: 10
+      });
+    } catch (err) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando solicitud de repaso SM-2' });
+    }
   }
 
   // 9. GET /api/srs/:userId/stats - Métricas de curva de olvido y memoria a largo plazo
@@ -1520,104 +1571,101 @@ const server = http.createServer(async (req, res) => {
       }, { 'Retry-After': String(ipLimit.retryAfter) });
     }
 
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const { questionId, transcript, durationSeconds, userId = 'user_1' } = payload;
+    const payload = await readJsonBody(req, res);
+    if (payload === null) return;
 
-        if (!isValidUserId(userId)) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'userId no válido' });
-        }
+    try {
+      const { questionId, transcript, durationSeconds, userId = 'user_1' } = payload;
 
-        // Rate limit por userId para evaluaciones con IA (10 / hora)
-        const userLimit = checkRateLimit(rateLimits.mockUser, userId, 10, 3600000);
-        if (userLimit.limited) {
-          return sendJson(res, 429, {
-            error: 'Too Many Requests',
-            message: 'Límite de evaluaciones con IA por usuario excedido (máximo 10 por hora).'
-          }, { 'Retry-After': String(userLimit.retryAfter) });
-        }
-
-        if (typeof transcript !== 'string' || transcript.length > 3000) {
-          return sendJson(res, 400, {
-            error: 'Bad Request',
-            message: 'transcript debe ser una cadena de texto de hasta 3000 caracteres'
-          });
-        }
-
-        if (!questionId || typeof questionId !== 'string' || questionId.length > 64) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'questionId no válido' });
-        }
-
-        const questionObj = mockInterviewQuestions.find(q => q.id === questionId);
-        if (!questionObj) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'questionId no encontrado en el catálogo' });
-        }
-
-        if (durationSeconds !== undefined && (!Number.isInteger(durationSeconds) || durationSeconds < 0 || durationSeconds > 3600)) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'durationSeconds debe ser un entero entre 0 y 3600' });
-        }
-
-        // Evaluar con IA (Gemini si hay key, o Evaluador Semántico Experto)
-        const evaluation = await evaluateInterviewWithAi(questionObj, transcript);
-
-        // Guardar en PostgreSQL Supabase si está disponible
-        if (pool) {
-          try {
-            await pool.query(`
-              INSERT INTO public.mock_interview_submissions 
-                (user_id, question_id, duration_seconds, score_percentage, technical_score, communication_score, tradeoff_score, seniority_verdict, user_transcript, feedback, key_concepts_covered)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            `, [
-              userId,
-              questionObj.id,
-              durationSeconds || 45,
-              evaluation.score,
-              evaluation.technicalScore,
-              evaluation.communicationScore,
-              evaluation.tradeoffScore,
-              evaluation.seniorityVerdict,
-              transcript || '',
-              evaluation.feedback || '',
-              JSON.stringify(evaluation.conceptsCovered || [])
-            ]);
-
-            // Sumar +50 XP por simular entrevista
-            await pool.query(`
-              UPDATE public.user_progress SET xp = xp + 50, updated_at = NOW() WHERE user_id = $1
-            `, [userId]);
-          } catch (dbErr) {
-            console.warn('DB error saving mock evaluation:', dbErr.message);
-          }
-        }
-
-        // Guardar en memoria
-        if (!memDb.mock_evaluations) memDb.mock_evaluations = [];
-        memDb.mock_evaluations.push({
-          userId,
-          questionId: questionObj.id,
-          createdAt: new Date().toISOString(),
-          ...evaluation
-        });
-
-        if (memDb.users[userId]) {
-          memDb.users[userId].xp += 50;
-        }
-
-        return sendJson(res, 200, {
-          success: true,
-          question: questionObj,
-          evaluation: evaluation,
-          xpEarned: 50
-        });
-
-      } catch (err) {
-        return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando evaluación con IA' });
+      if (!isValidUserId(userId)) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'userId no válido' });
       }
-    });
-    return;
+
+      // Rate limit por userId para evaluaciones con IA (10 / hora)
+      const userLimit = checkRateLimit(rateLimits.mockUser, userId, 10, 3600000);
+      if (userLimit.limited) {
+        return sendJson(res, 429, {
+          error: 'Too Many Requests',
+          message: 'Límite de evaluaciones con IA por usuario excedido (máximo 10 por hora).'
+        }, req, { 'Retry-After': String(userLimit.retryAfter) });
+      }
+
+      if (typeof transcript !== 'string' || transcript.length > 3000) {
+        return sendJson(res, 400, {
+          error: 'Bad Request',
+          message: 'transcript debe ser una cadena de texto de hasta 3000 caracteres'
+        });
+      }
+
+      if (!questionId || typeof questionId !== 'string' || questionId.length > 64) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'questionId no válido' });
+      }
+
+      const questionObj = mockInterviewQuestions.find(q => q.id === questionId);
+      if (!questionObj) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'questionId no encontrado en el catálogo' });
+      }
+
+      if (durationSeconds !== undefined && (!Number.isInteger(durationSeconds) || durationSeconds < 0 || durationSeconds > 3600)) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'durationSeconds debe ser un entero entre 0 y 3600' });
+      }
+
+      // Evaluar con IA (Gemini si hay key, o Evaluador Semántico Experto)
+      const evaluation = await evaluateInterviewWithAi(questionObj, transcript);
+
+      // Guardar en PostgreSQL Supabase si está disponible
+      if (pool) {
+        try {
+          await pool.query(`
+            INSERT INTO public.mock_interview_submissions 
+              (user_id, question_id, duration_seconds, score_percentage, technical_score, communication_score, tradeoff_score, seniority_verdict, user_transcript, feedback, key_concepts_covered)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          `, [
+            userId,
+            questionObj.id,
+            durationSeconds || 45,
+            evaluation.score,
+            evaluation.technicalScore,
+            evaluation.communicationScore,
+            evaluation.tradeoffScore,
+            evaluation.seniorityVerdict,
+            transcript || '',
+            evaluation.feedback || '',
+            JSON.stringify(evaluation.conceptsCovered || [])
+          ]);
+
+          // Sumar +50 XP por simular entrevista
+          await pool.query(`
+            UPDATE public.user_progress SET xp = xp + 50, updated_at = NOW() WHERE user_id = $1
+          `, [userId]);
+        } catch (dbErr) {
+          console.warn('DB error saving mock evaluation:', dbErr.message);
+        }
+      }
+
+      // Guardar en memoria
+      if (!memDb.mock_evaluations) memDb.mock_evaluations = [];
+      memDb.mock_evaluations.push({
+        userId,
+        questionId: questionObj.id,
+        createdAt: new Date().toISOString(),
+        ...evaluation
+      });
+
+      if (memDb.users[userId]) {
+        memDb.users[userId].xp += 50;
+      }
+
+      return sendJson(res, 200, {
+        success: true,
+        question: questionObj,
+        evaluation: evaluation,
+        xpEarned: 50
+      });
+
+    } catch (err) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando evaluación con IA' });
+    }
   }
 
   // 12. GET /api/mock/history/:userId - Historial de entrevistas simuladas
@@ -1672,78 +1720,75 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
     }
 
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const { worldId, bossId, score, xpAwarded = 150 } = payload;
+    const payload = await readJsonBody(req, res);
+    if (payload === null) return;
 
-        if (!worldId || typeof worldId !== 'string' || worldId.length > 64) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'worldId no válido' });
-        }
-        if (!bossId || typeof bossId !== 'string' || bossId.length > 64) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'bossId no válido' });
-        }
-        if (score === undefined || !Number.isInteger(score) || score < 0 || score > 100) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'score debe ser un entero entre 0 y 100' });
-        }
-        if (!Number.isInteger(xpAwarded) || xpAwarded < 0 || xpAwarded > 1000) {
-          return sendJson(res, 400, { error: 'Bad Request', message: 'xpAwarded debe ser un entero entre 0 y 1000' });
-        }
+    try {
+      const { worldId, bossId, score, xpAwarded = 150 } = payload;
 
-        if (pool) {
-          try {
-            await pool.query(`
-              INSERT INTO public.boss_challenges (user_id, world_id, boss_id, score, passed, xp_awarded, completed_at)
-              VALUES ($1, $2, $3, $4, TRUE, $5, NOW())
-              ON CONFLICT (user_id, world_id)
-              DO UPDATE SET score = GREATEST(boss_challenges.score, $4), xp_awarded = $5, completed_at = NOW()
-            `, [userId, worldId, bossId, score, xpAwarded]);
-
-            // Sumar XP por derrotar al Jefe en Supabase
-            await pool.query(`
-              UPDATE public.user_progress SET xp = xp + $2, updated_at = NOW() WHERE user_id = $1
-            `, [userId, xpAwarded]);
-          } catch (dbErr) {
-            console.warn('DB error saving boss challenge victory:', dbErr.message);
-          }
-        }
-
-        // Mem DB fallback
-        if (!memDb.boss_challenges) memDb.boss_challenges = [];
-        const existing = memDb.boss_challenges.find(b => b.user_id === userId && b.world_id === worldId);
-        if (existing) {
-          existing.score = Math.max(existing.score, score);
-          existing.completed_at = new Date().toISOString();
-        } else {
-          memDb.boss_challenges.push({
-            user_id: userId,
-            world_id: worldId,
-            boss_id: bossId,
-            score,
-            passed: true,
-            xp_awarded: xpAwarded,
-            completed_at: new Date().toISOString()
-          });
-        }
-
-        if (memDb.users[userId]) {
-          memDb.users[userId].xp += xpAwarded;
-        }
-
-        return sendJson(res, 200, {
-          success: true,
-          message: '¡Desafío Final registrado con éxito en Supabase!',
-          xpGained: xpAwarded,
-          worldId,
-          bossId
-        });
-      } catch (err) {
-        return sendJson(res, 400, { error: 'Error procesando desafío final: ' + err.message });
+      if (!worldId || typeof worldId !== 'string' || worldId.length > 64) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'worldId no válido' });
       }
-    });
-    return;
+      if (!bossId || typeof bossId !== 'string' || bossId.length > 64) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'bossId no válido' });
+      }
+      if (score === undefined || !Number.isInteger(score) || score < 0 || score > 100) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'score debe ser un entero entre 0 y 100' });
+      }
+      if (!Number.isInteger(xpAwarded) || xpAwarded < 0 || xpAwarded > 1000) {
+        return sendJson(res, 400, { error: 'Bad Request', message: 'xpAwarded debe ser un entero entre 0 y 1000' });
+      }
+
+      if (pool) {
+        try {
+          await pool.query(`
+            INSERT INTO public.boss_challenges (user_id, world_id, boss_id, score, passed, xp_awarded, completed_at)
+            VALUES ($1, $2, $3, $4, TRUE, $5, NOW())
+            ON CONFLICT (user_id, world_id)
+            DO UPDATE SET score = GREATEST(boss_challenges.score, $4), xp_awarded = $5, completed_at = NOW()
+          `, [userId, worldId, bossId, score, xpAwarded]);
+
+          // Sumar XP por derrotar al Jefe en Supabase
+          await pool.query(`
+            UPDATE public.user_progress SET xp = xp + $2, updated_at = NOW() WHERE user_id = $1
+          `, [userId, xpAwarded]);
+        } catch (dbErr) {
+          console.warn('DB error saving boss challenge victory:', dbErr.message);
+        }
+      }
+
+      // Mem DB fallback
+      if (!memDb.boss_challenges) memDb.boss_challenges = [];
+      const existing = memDb.boss_challenges.find(b => b.user_id === userId && b.world_id === worldId);
+      if (existing) {
+        existing.score = Math.max(existing.score, score);
+        existing.completed_at = new Date().toISOString();
+      } else {
+        memDb.boss_challenges.push({
+          user_id: userId,
+          world_id: worldId,
+          boss_id: bossId,
+          score,
+          passed: true,
+          xp_awarded: xpAwarded,
+          completed_at: new Date().toISOString()
+        });
+      }
+
+      if (memDb.users[userId]) {
+        memDb.users[userId].xp += xpAwarded;
+      }
+
+      return sendJson(res, 200, {
+        success: true,
+        message: '¡Desafío Final registrado con éxito en Supabase!',
+        xpGained: xpAwarded,
+        worldId,
+        bossId
+      });
+    } catch (err) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando desafío final' });
+    }
   }
 
   // 404 Fallback
