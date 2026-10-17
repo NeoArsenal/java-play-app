@@ -974,6 +974,50 @@ function isValidUserId(userId) {
   return UUID_V4_REGEX.test(userId) || LEGACY_USER_ID_REGEX.test(userId);
 }
 
+// Rate limiting en memoria por IP y por userId
+const rateLimits = {
+  mockUser: new Map(), // userId -> [timestamps]
+  mockIp: new Map(),   // ip -> [timestamps]
+  generalIp: new Map() // ip -> [timestamps]
+};
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded && typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
+}
+
+function checkRateLimit(map, key, maxRequests, windowMs) {
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  let timestamps = map.get(key) || [];
+  timestamps = timestamps.filter(ts => ts > windowStart);
+
+  if (timestamps.length >= maxRequests) {
+    const oldest = timestamps[0];
+    const retryAfter = Math.ceil((oldest + windowMs - now) / 1000);
+    return { limited: true, retryAfter: Math.max(1, retryAfter) };
+  }
+
+  timestamps.push(now);
+  map.set(key, timestamps);
+  return { limited: false, retryAfter: 0 };
+}
+
+// Limpieza periódica de rate limits cada 10 minutos
+setInterval(() => {
+  const now = Date.now();
+  for (const map of [rateLimits.mockUser, rateLimits.mockIp, rateLimits.generalIp]) {
+    for (const [key, timestamps] of map.entries()) {
+      const active = timestamps.filter(ts => ts > now - 3600000);
+      if (active.length === 0) map.delete(key);
+      else map.set(key, active);
+    }
+  }
+}, 600000).unref();
+
 function readCurriculum() {
   try {
     const raw = fs.readFileSync(CURRICULUM_PATH, 'utf8');
@@ -984,18 +1028,31 @@ function readCurriculum() {
   }
 }
 
-function sendJson(res, statusCode, data) {
+function sendJson(res, statusCode, data, extraHeaders = {}) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    ...extraHeaders
   });
   res.end(JSON.stringify(data, null, 2));
 }
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  const clientIp = getClientIp(req);
+
+  // Rate limiting general por IP para endpoints /api/ (300 peticiones / minuto)
+  if (url.pathname.startsWith('/api/')) {
+    const generalLimit = checkRateLimit(rateLimits.generalIp, clientIp, 300, 60000);
+    if (generalLimit.limited) {
+      return sendJson(res, 429, {
+        error: 'Too Many Requests',
+        message: 'Límite general de peticiones por minuto excedido. Intente más tarde.'
+      }, { 'Retry-After': String(generalLimit.retryAfter) });
+    }
+  }
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -1408,6 +1465,15 @@ const server = http.createServer(async (req, res) => {
 
   // 11. POST /api/mock/evaluate - Evaluación Semántica con IA (Gemini / Rúbrica Senior)
   if (req.method === 'POST' && url.pathname === '/api/mock/evaluate') {
+    // Rate limit por IP para evaluaciones con IA (30 / hora)
+    const ipLimit = checkRateLimit(rateLimits.mockIp, clientIp, 30, 3600000);
+    if (ipLimit.limited) {
+      return sendJson(res, 429, {
+        error: 'Too Many Requests',
+        message: 'Límite de evaluaciones con IA por IP excedido (máximo 30 por hora).'
+      }, { 'Retry-After': String(ipLimit.retryAfter) });
+    }
+
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
@@ -1417,6 +1483,15 @@ const server = http.createServer(async (req, res) => {
 
         if (!isValidUserId(userId)) {
           return sendJson(res, 400, { error: 'Bad Request', message: 'userId no válido' });
+        }
+
+        // Rate limit por userId para evaluaciones con IA (10 / hora)
+        const userLimit = checkRateLimit(rateLimits.mockUser, userId, 10, 3600000);
+        if (userLimit.limited) {
+          return sendJson(res, 429, {
+            error: 'Too Many Requests',
+            message: 'Límite de evaluaciones con IA por usuario excedido (máximo 10 por hora).'
+          }, { 'Retry-After': String(userLimit.retryAfter) });
         }
 
         if (typeof transcript !== 'string' || transcript.length > 3000) {
