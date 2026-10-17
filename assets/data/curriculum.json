@@ -2229,7 +2229,7 @@
               "question": "Agrega el sufijo correcto para declarar un literal float:",
               "codeTemplate": "float temperatura = 36.5___;",
               "correctAnswers": [
-                " f"
+                "f"
               ],
               "options": [
                 "f",
