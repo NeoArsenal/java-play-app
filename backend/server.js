@@ -981,6 +981,12 @@ const rateLimits = {
   generalIp: new Map() // ip -> [timestamps]
 };
 
+function maskUserId(userId) {
+  if (!userId || typeof userId !== 'string') return 'anon';
+  if (userId.length <= 8) return userId.substring(0, 2) + '***';
+  return userId.substring(0, 4) + '...' + userId.substring(userId.length - 4);
+}
+
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded && typeof forwarded === 'string') {
