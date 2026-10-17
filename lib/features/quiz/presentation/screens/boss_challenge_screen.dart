@@ -9,17 +9,18 @@ import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import '../widgets/types/multiple_choice_view.dart';
 import '../widgets/types/spot_the_bug_view.dart';
 import '../widgets/types/token_reorder_view.dart';
+import '../../../../core/services/user_service.dart';
 
 class BossChallengeScreen extends StatefulWidget {
   final World world;
   final BossChallenge bossChallenge;
-  final String userId;
+  final String? userId;
 
   const BossChallengeScreen({
     super.key,
     required this.world,
     required this.bossChallenge,
-    this.userId = 'user_1',
+    this.userId,
   });
 
   @override
@@ -203,7 +204,7 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
     // Guardar victoria local y sincronizar con Supabase
     try {
       await _bossRepo.recordBossDefeat(
-        userId: widget.userId,
+        userId: widget.userId ?? UserService.currentUserId,
         worldId: widget.world.id,
         bossId: widget.bossChallenge.id,
         score: 100,

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/srs_repository.dart';
 import '../../domain/models/srs_card.dart';
 import '../../domain/models/srs_stats.dart';
+import '../../../../core/services/user_service.dart';
 
 class SrsState {
   final List<SrsCard> dueCards;
@@ -49,7 +50,9 @@ class SrsNotifier extends StateNotifier<SrsState> {
   final SrsRepository _repository;
   final String userId;
 
-  SrsNotifier(this._repository, {this.userId = 'user_1'}) : super(const SrsState()) {
+  SrsNotifier(this._repository, {String? userId})
+      : userId = userId ?? UserService.currentUserId,
+        super(const SrsState()) {
     loadSrsData();
   }
 
@@ -104,5 +107,5 @@ final srsRepositoryProvider = Provider<SrsRepository>((ref) => SrsRepository());
 
 final srsProvider = StateNotifierProvider<SrsNotifier, SrsState>((ref) {
   final repo = ref.watch(srsRepositoryProvider);
-  return SrsNotifier(repo);
+  return SrsNotifier(repo, userId: UserService.currentUserId);
 });

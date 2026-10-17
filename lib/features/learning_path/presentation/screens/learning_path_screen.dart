@@ -15,6 +15,7 @@ import 'package:java_play_app/features/mock_interview/data/mock_interview_catalo
 import 'package:java_play_app/features/quiz/presentation/screens/quiz_screen.dart';
 import 'package:java_play_app/features/quiz/presentation/screens/boss_challenge_screen.dart';
 import 'package:java_play_app/features/learning_path/data/boss_repository.dart';
+import 'package:java_play_app/core/services/user_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 enum AppTab { path, srs, mock }
@@ -282,7 +283,8 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
 
   Future<void> _loadCompletedBosses() async {
     try {
-      final bosses = await _bossRepo.getCompletedBosses('user_1');
+      final userId = await UserService.getUserId();
+      final bosses = await _bossRepo.getCompletedBosses(userId);
       if (mounted) {
         setState(() {
           _completedBosses.addAll(bosses);
@@ -469,12 +471,13 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
       return;
     }
 
+    final userId = await UserService.getUserId();
     final victory = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => BossChallengeScreen(
           world: world,
           bossChallenge: boss,
-          userId: 'user_1',
+          userId: userId,
         ),
       ),
     );
@@ -485,7 +488,7 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
         _userXp += boss.xpReward;
       });
       await _bossRepo.recordBossDefeat(
-        userId: 'user_1',
+        userId: userId,
         worldId: world.id,
         bossId: boss.id,
         score: 100,
@@ -688,8 +691,9 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
       }
     }
 
+    final userId = await UserService.getUserId();
     final eval = await _mockRepo.evaluateAnswer(
-      userId: 'user_1',
+      userId: userId,
       questionId: question.id,
       transcript: text,
       durationSeconds: question.timeLimitSeconds - _recordingSeconds,
