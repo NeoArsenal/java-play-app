@@ -1184,9 +1184,10 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, {
       status: 'UP',
       service: 'JavaPlay Backend API',
-      database: pool ? (isSupabase ? 'PostgreSQL (Supabase Conectado)' : 'PostgreSQL Remoto') : 'In-Memory',
+      mode: pool ? 'PostgreSQL' : 'memDb',
+      database: pool ? 'PostgreSQL' : 'memDb',
       timestamp: new Date().toISOString()
-    });
+    }, req);
   }
 
   // 2. GET Curriculum (Worlds 0 to 10)
