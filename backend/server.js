@@ -1150,8 +1150,14 @@ function sendJson(res, statusCode, data, reqOrHeaders = null, extraHeaders = {})
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const clientIp = getClientIp(req);
+  try {
+    let url;
+    try {
+      url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    } catch {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'URL con formato inválido' }, req);
+    }
+    const clientIp = getClientIp(req);
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -1798,8 +1804,25 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // 404 Fallback
-  sendJson(res, 404, { error: 'Ruta no encontrada' });
+    // 404 Fallback
+    return sendJson(res, 404, { error: 'Not Found', message: 'Ruta no encontrada' }, req);
+  } catch (err) {
+    console.error('Unhandled server error:', err.message);
+    if (!res.headersSent) {
+      return sendJson(res, 500, {
+        error: 'Internal Server Error',
+        message: 'Error interno del servidor'
+      }, req);
+    }
+  }
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason && reason.message ? reason.message : reason);
 });
 
 server.listen(PORT, () => {
