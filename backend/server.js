@@ -961,6 +961,19 @@ async function evaluateInterviewWithAi(questionObj, userTranscript) {
   };
 }
 
+// ==============================================================
+// VALIDACIONES DE ENTRADA Y SEGURIDAD
+// ==============================================================
+
+// TODO: Endurecer a solo UUID v4 estricto una vez concluida la transición de APKs antiguos
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const LEGACY_USER_ID_REGEX = /^[A-Za-z0-9_-]{3,64}$/;
+
+function isValidUserId(userId) {
+  if (!userId || typeof userId !== 'string') return false;
+  return UUID_V4_REGEX.test(userId) || LEGACY_USER_ID_REGEX.test(userId);
+}
+
 function readCurriculum() {
   try {
     const raw = fs.readFileSync(CURRICULUM_PATH, 'utf8');
@@ -1043,6 +1056,10 @@ const server = http.createServer(async (req, res) => {
   // 4. GET User Progress
   if (req.method === 'GET' && url.pathname.startsWith('/api/progress/')) {
     const userId = url.pathname.replace('/api/progress/', '');
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
+
     if (pool) {
       try {
         const { rows } = await pool.query(`
@@ -1072,11 +1089,28 @@ const server = http.createServer(async (req, res) => {
   // 5. POST User Progress Update
   if (req.method === 'POST' && url.pathname.startsWith('/api/progress/')) {
     const userId = url.pathname.replace('/api/progress/', '');
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
+
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
+
+        if (payload.xpDelta !== undefined) {
+          if (!Number.isInteger(payload.xpDelta) || payload.xpDelta < 0 || payload.xpDelta > 1000) {
+            return sendJson(res, 400, { error: 'Bad Request', message: 'xpDelta debe ser un entero entre 0 y 1000' });
+          }
+        }
+        if (payload.lives !== undefined && (!Number.isInteger(payload.lives) || payload.lives < 0 || payload.lives > 5)) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'lives debe ser un entero entre 0 y 5' });
+        }
+        if (payload.streak !== undefined && (!Number.isInteger(payload.streak) || payload.streak < 0 || payload.streak > 100000)) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'streak debe ser un entero no negativo' });
+        }
+
         const user = memDb.users[userId] || { id: userId, name: 'Alonso', xp: 180, lives: 5, streak: 3, completedLessons: [] };
 
         if (payload.xpDelta) user.xp += payload.xpDelta;
@@ -1106,7 +1140,7 @@ const server = http.createServer(async (req, res) => {
 
         return sendJson(res, 200, { success: true, user });
       } catch (err) {
-        return sendJson(res, 400, { error: 'Invalid JSON body' });
+        return sendJson(res, 400, { error: 'Bad Request', message: 'Cuerpo de la petición inválido' });
       }
     });
     return;
@@ -1167,6 +1201,9 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname.match(/^\/api\/srs\/[^/]+\/due$/)) {
     const parts = url.pathname.split('/');
     const userId = parts[3];
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
     const curriculum = readCurriculum();
 
     const findExercise = (exId) => {
@@ -1212,13 +1249,27 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname.match(/^\/api\/srs\/[^/]+\/review$/)) {
     const parts = url.pathname.split('/');
     const userId = parts[3];
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
 
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
         const { exerciseId, worldId, quality } = JSON.parse(body || '{}');
-        const q = Math.max(0, Math.min(5, parseInt(quality !== undefined ? quality : 4, 10)));
+
+        // Validar quality (entero 0 a 5)
+        if (quality === undefined || !Number.isInteger(quality) || quality < 0 || quality > 5) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'quality debe ser un número entero entre 0 y 5' });
+        }
+
+        // Validar exerciseId (cadena no vacía de hasta 64 caracteres)
+        if (!exerciseId || typeof exerciseId !== 'string' || exerciseId.trim().length === 0 || exerciseId.length > 64) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'exerciseId debe ser una cadena no vacía de hasta 64 caracteres' });
+        }
+
+        const q = quality;
 
         let existingItem = null;
         if (pool) {
@@ -1298,7 +1349,7 @@ const server = http.createServer(async (req, res) => {
           xpGained: 10
         });
       } catch (err) {
-        return sendJson(res, 400, { error: 'Error procesando SM-2 review: ' + err.message });
+        return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando solicitud de repaso SM-2' });
       }
     });
     return;
@@ -1308,6 +1359,9 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname.match(/^\/api\/srs\/[^/]+\/stats$/)) {
     const parts = url.pathname.split('/');
     const userId = parts[3];
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
 
     let items = [];
     if (pool) {
@@ -1361,8 +1415,30 @@ const server = http.createServer(async (req, res) => {
         const payload = JSON.parse(body || '{}');
         const { questionId, transcript, durationSeconds, userId = 'user_1' } = payload;
 
-        const questionObj = mockInterviewQuestions.find(q => q.id === questionId) || mockInterviewQuestions[0];
-        
+        if (!isValidUserId(userId)) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'userId no válido' });
+        }
+
+        if (typeof transcript !== 'string' || transcript.length > 3000) {
+          return sendJson(res, 400, {
+            error: 'Bad Request',
+            message: 'transcript debe ser una cadena de texto de hasta 3000 caracteres'
+          });
+        }
+
+        if (!questionId || typeof questionId !== 'string' || questionId.length > 64) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'questionId no válido' });
+        }
+
+        const questionObj = mockInterviewQuestions.find(q => q.id === questionId);
+        if (!questionObj) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'questionId no encontrado en el catálogo' });
+        }
+
+        if (durationSeconds !== undefined && (!Number.isInteger(durationSeconds) || durationSeconds < 0 || durationSeconds > 3600)) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'durationSeconds debe ser un entero entre 0 y 3600' });
+        }
+
         // Evaluar con IA (Gemini si hay key, o Evaluador Semántico Experto)
         const evaluation = await evaluateInterviewWithAi(questionObj, transcript);
 
@@ -1417,7 +1493,7 @@ const server = http.createServer(async (req, res) => {
         });
 
       } catch (err) {
-        return sendJson(res, 400, { error: 'Error evaluando entrevista con IA: ' + err.message });
+        return sendJson(res, 400, { error: 'Bad Request', message: 'Error procesando evaluación con IA' });
       }
     });
     return;
@@ -1426,6 +1502,9 @@ const server = http.createServer(async (req, res) => {
   // 12. GET /api/mock/history/:userId - Historial de entrevistas simuladas
   if (req.method === 'GET' && url.pathname.startsWith('/api/mock/history/')) {
     const userId = url.pathname.replace('/api/mock/history/', '');
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
     if (pool) {
       try {
         const { rows } = await pool.query(`
@@ -1446,6 +1525,9 @@ const server = http.createServer(async (req, res) => {
   // 13. GET /api/boss/:userId - Obtener desafíos finales (Boss Challenges) completados por el usuario
   if (req.method === 'GET' && url.pathname.startsWith('/api/boss/')) {
     const userId = url.pathname.replace('/api/boss/', '');
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
     if (pool) {
       try {
         const { rows } = await pool.query(`
@@ -1465,12 +1547,29 @@ const server = http.createServer(async (req, res) => {
   // 14. POST /api/boss/:userId - Registrar victoria en Desafío Final (Boss Challenge)
   if (req.method === 'POST' && url.pathname.startsWith('/api/boss/')) {
     const userId = url.pathname.replace('/api/boss/', '');
+    if (!isValidUserId(userId)) {
+      return sendJson(res, 400, { error: 'Bad Request', message: 'Identificador de usuario no válido' });
+    }
+
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
         const { worldId, bossId, score, xpAwarded = 150 } = payload;
+
+        if (!worldId || typeof worldId !== 'string' || worldId.length > 64) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'worldId no válido' });
+        }
+        if (!bossId || typeof bossId !== 'string' || bossId.length > 64) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'bossId no válido' });
+        }
+        if (score === undefined || !Number.isInteger(score) || score < 0 || score > 100) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'score debe ser un entero entre 0 y 100' });
+        }
+        if (!Number.isInteger(xpAwarded) || xpAwarded < 0 || xpAwarded > 1000) {
+          return sendJson(res, 400, { error: 'Bad Request', message: 'xpAwarded debe ser un entero entre 0 y 1000' });
+        }
 
         if (pool) {
           try {
