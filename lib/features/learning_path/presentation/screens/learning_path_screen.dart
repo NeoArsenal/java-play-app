@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +18,12 @@ import 'package:java_play_app/features/learning_path/data/boss_repository.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 enum AppTab { path, srs, mock }
+
+/// Decodifica el JSON del currículum en un Isolate de fondo para evitar
+/// bloquear el hilo principal de la UI durante la carga inicial.
+Map<String, dynamic> _parseCurriculumJson(String jsonString) {
+  return json.decode(jsonString) as Map<String, dynamic>;
+}
 
 class LearningPathScreen extends StatefulWidget {
   const LearningPathScreen({super.key});
@@ -301,7 +308,7 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
   Future<void> _loadCurriculum() async {
     try {
       final jsonString = await rootBundle.loadString('assets/data/curriculum.json');
-      final data = json.decode(jsonString) as Map<String, dynamic>;
+      final data = await compute(_parseCurriculumJson, jsonString);
 
       final worldsJson = (data['worlds'] as List?) ?? [];
       final mockJson = (data['mockInterviews'] as List?) ?? [];
