@@ -6847,7 +6847,8 @@
     },
     "bug": {
       "lines": [
-        "@Configuration\n// Antipatrón: Intentar heredar de WebSecurityConfigurerAdapter en Spring Boot 3",
+        "@Configuration",
+        "// Antipatrón: Intentar heredar de WebSecurityConfigurerAdapter en Spring Boot 3",
         "public class OldSecurityConfig extends WebSecurityConfigurerAdapter {}"
       ],
       "bugIndex": 2,
