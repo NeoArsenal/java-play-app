@@ -1028,13 +1028,58 @@ function readCurriculum() {
   }
 }
 
-function sendJson(res, statusCode, data, extraHeaders = {}) {
+// ==============================================================
+// CORS: CONFIGURACIÓN DE ORÍGENES PERMITIDOS
+// ==============================================================
+
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+  'http://localhost:3000',
+  'https://javaplay-app.azurewebsites.net'
+];
+
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS;
+const ALLOWED_ORIGINS = rawAllowedOrigins
+  ? rawAllowedOrigins.split(',').map(s => s.trim()).filter(Boolean)
+  : DEFAULT_ALLOWED_ORIGINS;
+
+function getCorsHeaders(req) {
+  const headers = {
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  };
+
+  const origin = req?.headers?.['origin'];
+  if (!origin) {
+    // Peticiones sin header Origin (móvil nativo, server-to-server, curl)
+    return headers;
+  }
+
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    headers['Vary'] = 'Origin';
+  }
+
+  return headers;
+}
+
+function sendJson(res, statusCode, data, reqOrHeaders = null, extraHeaders = {}) {
+  let req = null;
+  let headers = {};
+
+  if (reqOrHeaders && reqOrHeaders.headers && typeof reqOrHeaders.method === 'string') {
+    req = reqOrHeaders;
+    headers = extraHeaders || {};
+  } else if (reqOrHeaders && typeof reqOrHeaders === 'object') {
+    headers = reqOrHeaders;
+  }
+
+  const cors = getCorsHeaders(req);
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    ...extraHeaders
+    ...cors,
+    ...headers
   });
   res.end(JSON.stringify(data, null, 2));
 }
@@ -1043,6 +1088,18 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const clientIp = getClientIp(req);
 
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers['origin'];
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+      res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ error: 'Forbidden', message: 'Origen no permitido por política CORS' }));
+    }
+    const cors = getCorsHeaders(req);
+    res.writeHead(204, cors);
+    return res.end();
+  }
+
   // Rate limiting general por IP para endpoints /api/ (300 peticiones / minuto)
   if (url.pathname.startsWith('/api/')) {
     const generalLimit = checkRateLimit(rateLimits.generalIp, clientIp, 300, 60000);
@@ -1050,19 +1107,8 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 429, {
         error: 'Too Many Requests',
         message: 'Límite general de peticiones por minuto excedido. Intente más tarde.'
-      }, { 'Retry-After': String(generalLimit.retryAfter) });
+      }, req, { 'Retry-After': String(generalLimit.retryAfter) });
     }
-  }
-
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-    });
-    res.end();
-    return;
   }
 
   // 0. Serve Frontend Web Preview (Render Cloud & Local Host)
