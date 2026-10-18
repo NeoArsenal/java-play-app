@@ -123,7 +123,7 @@ CREATE POLICY "Acceso total a boss_challenges" ON public.boss_challenges FOR ALL
 -- Datos Semilla Iniciales
 INSERT INTO public.users (id, username, email) 
 VALUES 
-    ('user_1', 'Alonso (Dev)', 'alonso@javaplay.dev'),
+    ('user_1', 'Nuevo Dev', 'dev@javaplay.dev'),
     ('user_2', 'Elena (Staff JVM)', 'elena@javaplay.dev'),
     ('user_3', 'Carlos (Spring Lead)', 'carlos@javaplay.dev')
 ON CONFLICT (id) DO NOTHING;

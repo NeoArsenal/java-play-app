@@ -106,7 +106,7 @@ const memDb = {
   users: {
     'user_1': {
       id: 'user_1',
-      name: 'Alonso (Dev)',
+      name: 'Nuevo Dev',
       xp: 180,
       lives: 5,
       streak: 3,
@@ -117,7 +117,7 @@ const memDb = {
   leaderboard: [
     { rank: 1, name: 'Elena (Staff JVM)', xp: 1420, league: 'Diamond 💎' },
     { rank: 2, name: 'Carlos (Spring Lead)', xp: 1190, league: 'Diamond 💎' },
-    { rank: 3, name: 'Alonso (Dev)', xp: 180, league: 'Diamond 💎' },
+    { rank: 3, name: 'Nuevo Dev', xp: 180, league: 'Diamond 💎' },
     { rank: 4, name: 'Lucía (Junior)', xp: 95, league: 'Diamond 💎' },
     { rank: 5, name: 'Mateo (Intern)', xp: 40, league: 'Diamond 💎' }
   ],
@@ -1303,7 +1303,7 @@ const server = http.createServer(async (req, res) => {
 
     const user = memDb.users[userId] || {
       id: userId,
-      name: 'Alonso (Dev)',
+      name: 'Nuevo Dev',
       xp: 180,
       lives: 5,
       streak: 3,
@@ -1336,7 +1336,7 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { error: 'Bad Request', message: 'streak debe ser un entero no negativo' });
       }
 
-      const user = memDb.users[userId] || { id: userId, name: 'Alonso', xp: 180, lives: 5, streak: 3, completedLessons: [] };
+      const user = memDb.users[userId] || { id: userId, name: 'Nuevo Dev', xp: 180, lives: 5, streak: 3, completedLessons: [] };
 
       if (payload.xpDelta) user.xp += payload.xpDelta;
       if (payload.lives !== undefined) user.lives = Math.max(0, Math.min(5, payload.lives));
@@ -1358,7 +1358,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       // Update Leaderboard
-      const me = memDb.leaderboard.find(u => u.name.includes('Alonso'));
+      const me = memDb.leaderboard.find(u => u.name.includes('Nuevo Dev'));
       if (me) me.xp = user.xp;
       memDb.leaderboard.sort((a, b) => b.xp - a.xp);
       memDb.leaderboard.forEach((u, i) => u.rank = i + 1);
