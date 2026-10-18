@@ -499,8 +499,8 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: const [
+                const Row(
+                  children: [
                     Icon(Icons.bolt, color: AppColors.duolingoOrange, size: 16),
                     SizedBox(width: 4),
                     Text(

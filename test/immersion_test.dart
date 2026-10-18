@@ -198,7 +198,7 @@ void main() {
     );
 
     testWidgets('shows large Javi (96px) and no bug when answer is correct', (tester) async {
-      final quizState = QuizState(
+      const quizState = QuizState(
         lesson: dummyLesson,
         answerStatus: AnswerStatus.correct,
       );
@@ -226,7 +226,7 @@ void main() {
     });
 
     testWidgets('shows Javi sad and Bug (40px) when answer is incorrect', (tester) async {
-      final quizState = QuizState(
+      const quizState = QuizState(
         lesson: dummyLesson,
         answerStatus: AnswerStatus.incorrect,
       );

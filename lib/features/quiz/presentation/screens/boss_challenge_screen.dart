@@ -9,6 +9,7 @@ import 'package:java_play_app/features/learning_path/domain/models/world.dart';
 import 'package:java_play_app/features/learning_path/domain/models/boss_challenge.dart';
 import 'package:java_play_app/features/learning_path/data/boss_repository.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
+import '../controllers/quiz_controller.dart';
 import '../widgets/types/multiple_choice_view.dart';
 import '../widgets/types/spot_the_bug_view.dart';
 import '../widgets/types/token_reorder_view.dart';
@@ -534,7 +535,7 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
         exercise: exercise,
         selectedLineIndex: _selectedBugLineIndex,
         answerStatus: _isVerified
-            ? (_isCorrect ? AnswerStatus.correct : AnswerStatus.incorrect)
+            ? (_wasLastCorrect ? AnswerStatus.correct : AnswerStatus.incorrect)
             : AnswerStatus.unselected,
         onSelectLine: (idx) {
           if (!_isVerified) setState(() => _selectedBugLineIndex = idx);
