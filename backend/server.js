@@ -1243,6 +1243,37 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, { service: 'JavaPlay API', status: 'UP' }, req);
   }
 
+  // 0.1 Privacy Policy HTML
+  if (req.method === 'GET' && url.pathname === '/privacy') {
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de Privacidad - JavaPlay</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    .card { background: #1e293b; border-radius: 12px; padding: 32px; max-width: 600px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h1 { margin-top: 0; color: #38bdf8; font-size: 1.5rem; }
+    p { line-height: 1.6; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Política de Privacidad - JavaPlay</h1>
+    <p>Política de privacidad: pendiente de redactar</p>
+  </div>
+</body>
+</html>`;
+    const cors = getCorsHeaders(req);
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Length': Buffer.byteLength(html),
+      ...cors
+    });
+    return res.end(html);
+  }
+
   // 1. Healthcheck
   if (url.pathname === '/api/health') {
     return sendJson(res, 200, {
