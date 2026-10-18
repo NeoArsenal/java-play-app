@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
 import 'package:java_play_app/features/learning_path/domain/models/world.dart';
 import 'package:java_play_app/features/learning_path/domain/models/boss_challenge.dart';
 import 'package:java_play_app/features/learning_path/data/boss_repository.dart';
@@ -365,30 +367,42 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
         children: [
           Row(
             children: [
-              // Avatar animado del Jefe
+              // Avatar animado del Jefe con sacudida en impacto y BugEnemyWidget
               ScaleTransition(
                 scale: _pulseAnimation,
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFF4B4B), Color(0xFFFF9600)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF4B4B).withOpacity(0.5),
-                        blurRadius: 16,
-                      ),
-                    ],
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey('boss_shake_${_currentIndex}_${_isVerified}_$_wasLastCorrect'),
+                  duration: const Duration(milliseconds: 350),
+                  tween: Tween<double>(
+                    begin: (_isVerified && _wasLastCorrect) ? 1.0 : 0.0,
+                    end: 0.0,
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    widget.bossChallenge.bossAvatar,
-                    style: const TextStyle(fontSize: 28),
+                  builder: (context, shakeVal, child) {
+                    final dx = sin(shakeVal * pi * 4) * 8 * shakeVal;
+                    return Transform.translate(
+                      offset: Offset(dx, 0),
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF4B4B), Color(0xFFFF9600)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF4B4B).withOpacity(0.5),
+                          blurRadius: 16,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: _buildBossVisual(),
                   ),
                 ),
               ),
@@ -484,6 +498,22 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
         ],
       ),
     );
+  }
+
+  Widget _buildBossVisual() {
+    if (_bossHp <= 0 || _isVictory) {
+      return const BugEnemyWidget(state: BugEnemyState.defeated, size: 38);
+    }
+    if (_isVerified && _wasLastCorrect) {
+      return const BugEnemyWidget(state: BugEnemyState.glitch, size: 38);
+    }
+    if (widget.bossChallenge.bossAvatar.trim().isNotEmpty) {
+      return Text(
+        widget.bossChallenge.bossAvatar,
+        style: const TextStyle(fontSize: 28),
+      );
+    }
+    return const BugEnemyWidget(state: BugEnemyState.appear, size: 38);
   }
 
   Widget _buildCurrentExerciseView(Exercise exercise) {
@@ -629,25 +659,32 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFC800), Color(0xFFFF9600)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFFC800).withOpacity(0.6),
-                        blurRadius: 30,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const BugEnemyWidget(state: BugEnemyState.defeated, size: 60),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFC800), Color(0xFFFF9600)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFC800).withOpacity(0.6),
+                            blurRadius: 30,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text("🏆", style: TextStyle(fontSize: 54)),
+                      alignment: Alignment.center,
+                      child: const Text("🏆", style: TextStyle(fontSize: 50)),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 const Text(
