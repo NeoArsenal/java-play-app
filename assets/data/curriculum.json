@@ -1347,7 +1347,7 @@
               "type": "FILL_BLANK",
               "id": "m1l3e9",
               "question": "Completa el operador de concatenacion para unir nombre con apellido:",
-              "codeTemplate": "String completo = nombre ___ \" \" ___ apellido;",
+              "codeTemplate": "String completo = nombre + \" \" ___ apellido;",
               "correctAnswers": [
                 "+"
               ],
@@ -3048,18 +3048,18 @@
             {
               "type": "FILL_BLANK",
               "id": "m2l4e9",
-              "question": "Completa el limite para recorrer una matriz 3x3 con bucles anidados:",
-              "codeTemplate": "for (int i = 0; i < ___; i++) {\n    for (int j = 0; j < ___; j++) {\n        System.out.println(matriz[i][j]);\n    }\n}",
+              "question": "Completa el limite para recorrer las columnas de una matriz con bucles anidados:",
+              "codeTemplate": "for (int i = 0; i < matriz.length; i++) {\n    for (int j = 0; j < ___; j++) {\n        System.out.println(matriz[i][j]);\n    }\n}",
               "correctAnswers": [
-                "3"
+                "matriz[i].length"
               ],
               "options": [
-                "3",
-                "2",
-                "4",
-                "10"
+                "matriz[i].length",
+                "matriz.length",
+                "matriz[j].length",
+                "i"
               ],
-              "explanation": "Una matriz 3x3 tiene indices 0, 1 y 2. Por eso el limite es i < 3 y j < 3."
+              "explanation": "El bucle externo recorre las filas con matriz.length y el interno las columnas de cada fila con matriz[i].length."
             },
             {
               "type": "TOKEN_REORDER",
@@ -5035,7 +5035,7 @@
               "type": "FILL_BLANK",
               "id": "m3l7e9",
               "question": "Completa la declaracion de una clase abstracta:",
-              "codeTemplate": "public ___ class Figura {\n    ___ double calcularArea();\n}",
+              "codeTemplate": "public abstract class Figura {\n    ___ double calcularArea();\n}",
               "correctAnswers": [
                 "abstract"
               ],

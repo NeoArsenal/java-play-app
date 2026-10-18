@@ -1,72 +1,68 @@
 # Revisión de Contenido Curricular (Content Review)
 
-> **Nota:** Según las restricciones de la tarea actual, `assets/data/curriculum.json` permanece **sin modificaciones**. Los siguientes hallazgos se documentan para su futura corrección planificada.
+> **Estado:** Ejercicios corregidos en rama `feat/code-block-fix`. Respaldo previo resguardado en `docs_private/curriculum.backup2.json`.
 
 ---
 
-## Hallazgos de Integridad en Ejercicios FILL_BLANK
+## Hallazgos de Integridad en Ejercicios FILL_BLANK (Resueltos)
 
-Se detectaron 3 ejercicios de tipo `FILL_BLANK` donde el número de delimitadores de hueco en `codeTemplate` (`___`) no coincide con el tamaño del array `correctAnswers`:
+Se detectaron y corrigieron 3 ejercicios de tipo `FILL_BLANK` donde el número de delimitadores de hueco en `codeTemplate` (`___`) no coincidía con el tamaño del array `correctAnswers`. Se aplicó la **Opción B** para preservar la consistencia con el motor de validación:
 
-### 1. Ejercicio `m1l3e9` (Mundo 1, Lección 3, Ejercicio 9)
+### 1. Ejercicio `m1l3e9` (Mundo 1, Lección 3, Ejercicio 9) - RESUELTO
 - **Pregunta:** Concatenación de cadenas en Java.
-- **`codeTemplate` actual:**
+- **`codeTemplate` corregido:**
   ```java
-  String completo = nombre ___ " " ___ apellido;
+  String completo = nombre + " " ___ apellido;
   ```
-- **`correctAnswers` actual:** `["+"]` (longitud 1).
-- **Problema:** Hay 2 huecos para rellenar (`nombre ___ " "` y `" " ___ apellido`), pero solo se provee 1 respuesta en el array, impidiendo que el motor de validación pueda completar el segundo hueco correctamente si evalúa ambos.
-- **Propuesta de solución:**
-  - **Opción A (Recomendada):** Actualizar `correctAnswers` a `["+", "+"]` y en `options` permitir seleccionar `+` dos veces o proveer dos tokens `+`.
-  - **Opción B:** Dejar un solo hueco en el template: `String completo = nombre + " " ___ apellido;` con `correctAnswers: ["+"]`.
+- **`correctAnswers`:** `["+"]` (1 hueco, 1 respuesta).
+- **Estado:** Corregido en `assets/data/curriculum.json`.
 
 ---
 
-### 2. Ejercicio `m2l4e9` (Mundo 2, Lección 4, Ejercicio 9)
+### 2. Ejercicio `m2l4e9` (Mundo 2, Lección 4, Ejercicio 9) - RESUELTO
 - **Pregunta:** Recorrido de matrices bidimensionales.
-- **`codeTemplate` actual:**
+- **`codeTemplate` corregido:**
   ```java
-  for (int i = 0; i < ___; i++) {
+  for (int i = 0; i < matriz.length; i++) {
       for (int j = 0; j < ___; j++) {
           System.out.println(matriz[i][j]);
       }
   }
   ```
-- **`correctAnswers` actual:** `["matriz.length"]` (longitud 1).
-- **Problema:** Hay 2 huecos en los bucles anidados (`i < ___` y `j < ___`), pero solo se provee `matriz.length` en `correctAnswers`. El segundo límite (`matriz[i].length` o `matriz[0].length`) no está en `correctAnswers`.
-- **Propuesta de solución:**
-  - **Opción A (Recomendada):** Fijar el bucle externo y evaluar el interno:
-    ```java
-    for (int i = 0; i < matriz.length; i++) {
-        for (int j = 0; j < ___; j++) {
-            System.out.println(matriz[i][j]);
-        }
-    }
-    ```
-    con `correctAnswers: ["matriz[i].length"]` o `["matriz[0].length"]`.
-  - **Opción B:** Si se desean ambos huecos, definir `correctAnswers: ["matriz.length", "matriz[i].length"]` y añadir las opciones correspondientes en `options`.
+- **`correctAnswers`:** `["matriz[i].length"]` (1 hueco, 1 respuesta).
+- **`options`:** `["matriz[i].length", "matriz.length", "matriz[j].length", "i"]`.
+- **Estado:** Corregido en `assets/data/curriculum.json`.
 
 ---
 
-### 3. Ejercicio `m3l7e9` (Mundo 3, Lección 7, Ejercicio 9)
+### 3. Ejercicio `m3l7e9` (Mundo 3, Lección 7, Ejercicio 9) - RESUELTO
 - **Pregunta:** Clases y métodos abstractos.
-- **`codeTemplate` actual:**
+- **`codeTemplate` corregido:**
   ```java
-  public ___ class Figura {
+  public abstract class Figura {
       ___ double calcularArea();
   }
   ```
-- **`correctAnswers` actual:** `["abstract"]` (longitud 1).
-- **Problema:** Hay 2 huecos (`public ___ class` y `___ double calcularArea()`), pero solo una entrada en `correctAnswers`.
-- **Propuesta de solución:**
-  - **Opción A (Recomendada):** Actualizar `correctAnswers` a `["abstract", "abstract"]` y permitir el token duplicado.
-  - **Opción B:** Dejar un solo hueco en la clase o en el método:
-    ```java
-    public abstract class Figura {
-        ___ double calcularArea();
-    }
-    ```
-    con `correctAnswers: ["abstract"]`.
+- **`correctAnswers`:** `["abstract"]` (1 hueco, 1 respuesta).
+- **Estado:** Corregido en `assets/data/curriculum.json`.
+
+---
+
+## Análisis de Enunciados en Ejercicios SPOT_THE_BUG
+
+De los **140 ejercicios** totales de tipo `SPOT_THE_BUG` presentes en el currículum:
+- **100 ejercicios** (exactamente todos los correspondientes al ejercicio 4 de cada una de las 100 lecciones principales, con IDs `mundo_X_lY_ex4`) utilizan un enunciado largo generado por plantilla:
+  > `"Inspección de código en <Título de Lección>: Toca la línea donde ocurrirá un fallo o comportamiento erróneo:"`
+- Los otros **40 ejercicios** (en su mayoría ejercicios adicionales como `mXlYe10` o desafíos de jefe) utilizan enunciados específicos y directos (ej. `"Toca la línea que intenta instanciar una clase abstracta:"`).
+
+### Diagnóstico de UX / UI
+1. **Redundancia:** La barra de encabezado ya indica `"ENCUENTRA EL ERROR"` y `"DINÁMICA JAVA"`, por lo que repetir `"Inspección de código en..."` ocupa espacio vertical valioso (~110-140 caracteres).
+2. **Empuje de contenido:** En pantallas de 360 dp de ancho, este texto toma de 3 a 4 líneas completas, desplazando el bloque de código hacia abajo y reduciendo el espacio disponible.
+
+### Propuestas de Versión Abreviada (Pendiente de Aprobación, enunciados intactos por ahora)
+- **Propuesta 1 (Ultra corta):** `"Toca la línea con el error:"` (28 caracteres).
+- **Propuesta 2 (Acción directa):** `"Encuentra el fallo en este código:"` (34 caracteres).
+- **Propuesta 3 (Contextual breve):** `"<Tema>: Toca la línea errónea"` (~40 caracteres).
 
 ---
 

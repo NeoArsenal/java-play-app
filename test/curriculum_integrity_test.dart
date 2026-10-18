@@ -174,6 +174,28 @@ void main() {
       }
     });
 
+    test('FILL_BLANK: number of "___" in codeTemplate equals correctAnswers.length', () {
+      final fbExercises = allExercises.where((e) => e['type'] == 'FILL_BLANK');
+      expect(fbExercises, isNotEmpty);
+
+      final blankRegex = RegExp(r'_{2,}');
+      for (final ex in fbExercises) {
+        final id = ex['id'] as String;
+        final template = ex['codeTemplate'] as String?;
+        expect(template, isNotNull, reason: 'Exercise $id must have codeTemplate');
+
+        final blanksCount = blankRegex.allMatches(template!).length;
+        final correctAnswers = (ex['correctAnswers'] as List?)?.cast<String>();
+        expect(correctAnswers, isNotNull, reason: 'Exercise $id must have correctAnswers');
+
+        expect(
+          blanksCount,
+          correctAnswers!.length,
+          reason: 'Exercise $id codeTemplate has $blanksCount placeholders ("___") but correctAnswers has ${correctAnswers.length}',
+        );
+      }
+    });
+
     test('SPOT_THE_BUG: 0 <= buggyLineIndex < codeLines.length', () {
       final stbExercises = allExercises.where((e) => e['type'] == 'SPOT_THE_BUG');
       expect(stbExercises, isNotEmpty);
