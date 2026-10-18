@@ -29,7 +29,7 @@ class AppColors {
   
   // Text Colors
   static const Color textPrimary = Colors.white;
-  static const Color textSecondary = Color(0xFFA0A2B0);
+  static const Color textSecondary = Color(0xFFC5C7D5);
   static const Color textDisabled = Color(0xFF5A5C6A);
   
   // Code Snippet Colors
