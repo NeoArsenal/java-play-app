@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../controllers/quiz_controller.dart';
 import '../../../quiz/domain/models/exercise.dart';
@@ -8,6 +11,8 @@ class FeedbackBottomSheet extends StatelessWidget {
   final VoidCallback onVerify;
   final VoidCallback onContinue;
   final VoidCallback? onAssist;
+  final MascotState? mascotState;
+  final BugEnemyState? bugState;
 
   const FeedbackBottomSheet({
     super.key,
@@ -15,6 +20,8 @@ class FeedbackBottomSheet extends StatelessWidget {
     required this.onVerify,
     required this.onContinue,
     this.onAssist,
+    this.mascotState,
+    this.bugState,
   });
 
   @override
@@ -73,58 +80,111 @@ class FeedbackBottomSheet extends StatelessWidget {
         children: [
           if (status == AnswerStatus.correct) ...[
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  state.isAssistModeActive ? Icons.stars : Icons.check_circle,
-                  color: state.isAssistModeActive ? AppColors.gold : AppColors.primaryGreen,
-                  size: 28,
+                MascotWidget(
+                  state: mascotState ?? MascotState.happy,
+                  size: 96,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  state.isAssistModeActive ? "¡Racha salvada!" : "¡Excelente respuesta!",
-                  style: TextStyle(
-                    color: state.isAssistModeActive ? AppColors.gold : AppColors.primaryGreen,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            state.isAssistModeActive ? Icons.stars : Icons.check_circle,
+                            color: state.isAssistModeActive ? AppColors.gold : AppColors.primaryGreen,
+                            size: 26,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              state.isAssistModeActive ? "¡Racha salvada!" : "¡Excelente respuesta!",
+                              style: TextStyle(
+                                color: state.isAssistModeActive ? AppColors.gold : AppColors.primaryGreen,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        state.isAssistModeActive
+                            ? "Ejercicio completado con asistencia (+5 XP). ${state.currentExercise.explanation}"
+                            : state.currentExercise.explanation,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              state.isAssistModeActive
-                  ? "Ejercicio completado con asistencia (+5 XP). ${state.currentExercise.explanation}"
-                  : state.currentExercise.explanation,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.35,
-              ),
             ),
             const SizedBox(height: 16),
           ] else if (status == AnswerStatus.incorrect) ...[
             Row(
-              children: const [
-                Icon(Icons.cancel, color: AppColors.errorRed, size: 28),
-                SizedBox(width: 8),
-                Text(
-                  "Solución incorrecta",
-                  style: TextStyle(
-                    color: AppColors.errorRed,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const MascotWidget(
+                      state: MascotState.sad,
+                      size: 96,
+                    ),
+                    Positioned(
+                      right: -4,
+                      bottom: 0,
+                      child: BugEnemyWidget(
+                        state: bugState ?? BugEnemyState.glitch,
+                        size: 40,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.cancel, color: AppColors.errorRed, size: 26),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              "Solución incorrecta",
+                              style: TextStyle(
+                                color: AppColors.errorRed,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        state.currentExercise.explanation,
+                        style: const TextStyle(
+                          color: Color(0xFFFFD4D4),
+                          fontSize: 13.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              state.currentExercise.explanation,
-              style: const TextStyle(
-                color: Color(0xFFFFB8B8),
-                fontSize: 14,
-                height: 1.35,
-              ),
             ),
             const SizedBox(height: 16),
           ],

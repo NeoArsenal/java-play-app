@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
 import 'package:java_play_app/core/services/feedback_service.dart';
-import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
 import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
 import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
@@ -29,21 +28,23 @@ class QuizScreen extends ConsumerStatefulWidget {
 
 class _QuizScreenState extends ConsumerState<QuizScreen> {
   MascotState _mascotState = MascotState.thinking;
-  Timer? _idleTimer;
+  Timer? _inactivityTimer;
   Timer? _bugDefeatedTimer;
   int _consecutiveCorrect = 0;
   bool _showBug = false;
   BugEnemyState _bugState = BugEnemyState.glitch;
 
+  static const Duration _inactivityDuration = Duration(seconds: 20);
+
   @override
   void initState() {
     super.initState();
-    _startIdleTimer();
+    _resetInactivityTimer();
   }
 
-  void _startIdleTimer() {
-    _idleTimer?.cancel();
-    _idleTimer = Timer(const Duration(milliseconds: 1500), () {
+  void _resetInactivityTimer() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer(_inactivityDuration, () {
       if (mounted) {
         setState(() {
           _mascotState = MascotState.idle;
@@ -52,9 +53,18 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     });
   }
 
+  void _onUserInteraction() {
+    if (_mascotState == MascotState.idle) {
+      setState(() {
+        _mascotState = MascotState.thinking;
+      });
+    }
+    _resetInactivityTimer();
+  }
+
   @override
   void dispose() {
-    _idleTimer?.cancel();
+    _inactivityTimer?.cancel();
     _bugDefeatedTimer?.cancel();
     super.dispose();
   }
@@ -72,11 +82,12 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             _showBug = false;
           }
         });
-        _startIdleTimer();
+        _resetInactivityTimer();
       }
 
       // Correct answer
       if (next.answerStatus == AnswerStatus.correct && previous.answerStatus != AnswerStatus.correct) {
+        _inactivityTimer?.cancel();
         FeedbackService.instance.onCorrect();
         _consecutiveCorrect++;
         setState(() {
@@ -91,11 +102,11 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             });
           }
         });
-        _startIdleTimer();
       }
 
       // Incorrect answer
       if (next.answerStatus == AnswerStatus.incorrect && previous.answerStatus != AnswerStatus.incorrect) {
+        _inactivityTimer?.cancel();
         FeedbackService.instance.onWrong();
         _consecutiveCorrect = 0;
         setState(() {
@@ -103,7 +114,6 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           _showBug = true;
           _bugState = BugEnemyState.glitch;
         });
-        _startIdleTimer();
       }
     });
 
@@ -134,50 +144,29 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           currentIndex: quizState.currentExerciseIndex + 1,
           totalExercises: quizState.lesson.exercises.length,
           onClose: () => _confirmExit(context),
-          mascot: MascotWidget(state: _mascotState, size: 34),
         ),
         body: SafeArea(
-          child: Column(
-            children: [
-              if (_showBug)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF261219),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.errorRed.withOpacity(0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      BugEnemyWidget(state: _bugState, size: 40),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          "¡Bug detectado en el código! Corrige la respuesta para derrotarlo.",
-                          style: TextStyle(
-                            color: Color(0xFFFF9E9E),
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
+          child: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (_) => _onUserInteraction(),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: _buildExerciseBody(currentExercise, quizState, quizNotifier),
                   ),
                 ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  child: _buildExerciseBody(currentExercise, quizState, quizNotifier),
+                FeedbackBottomSheet(
+                  state: quizState,
+                  mascotState: _mascotState,
+                  bugState: _bugState,
+                  onVerify: () => quizNotifier.verifyAnswer(),
+                  onContinue: () => quizNotifier.proceedToNext(),
+                  onAssist: () => quizNotifier.activateAssistMode(),
                 ),
-              ),
-              FeedbackBottomSheet(
-                state: quizState,
-                onVerify: () => quizNotifier.verifyAnswer(),
-                onContinue: () => quizNotifier.proceedToNext(),
-                onAssist: () => quizNotifier.activateAssistMode(),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

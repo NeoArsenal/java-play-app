@@ -40,7 +40,7 @@ class ExerciseHeader extends StatelessWidget implements PreferredSizeWidget {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 26),
+              icon: const Icon(Icons.close, color: Colors.white, size: 26),
               onPressed: onClose,
             ),
             if (mascot != null) ...[
