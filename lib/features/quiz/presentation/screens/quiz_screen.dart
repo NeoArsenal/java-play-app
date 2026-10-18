@@ -194,7 +194,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("💡", style: TextStyle(fontSize: 18)),
+                const Icon(Icons.lightbulb, color: AppColors.gold, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

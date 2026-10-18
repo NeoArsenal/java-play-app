@@ -295,7 +295,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       state = state.copyWith(
         isAssistModeActive: true,
         eliminatedOptionIndices: toEliminate,
-        assistHint: "💡 Modo Asistencia (50/50): Hemos descartado 2 opciones incorrectas para ayudarte a identificar la respuesta correcta. ¡Elige entre las restantes y salva tu racha!",
+        assistHint: "Modo Asistencia (50/50): Hemos descartado 2 opciones incorrectas para ayudarte a identificar la respuesta correcta. ¡Elige entre las restantes y salva tu racha!",
         selectedOptionIndex: null,
         clearSelection: true,
         answerStatus: AnswerStatus.unselected,
@@ -310,14 +310,13 @@ class QuizNotifier extends StateNotifier<QuizState> {
         isAssistModeActive: true,
         userOrderedTokens: prefilled,
         availableTokens: remaining,
-        assistHint: "💡 Modo Semiterminado: Hemos colocado los primeros $prefillCount de $total tokens en orden. ¡Completa el resto para cerrar la sentencia!",
+        assistHint: "Modo Semiterminado: Hemos colocado los primeros $prefillCount de $total tokens en orden. ¡Completa el resto para cerrar la sentencia!",
         answerStatus: AnswerStatus.unselected,
       );
     } else if (ex is SpotTheBugExercise) {
-      final lineNum = ex.buggyLineIndex + 1;
       state = state.copyWith(
         isAssistModeActive: true,
-        assistHint: "💡 Pista del Compilador / Linter: Inspecciona de cerca la Línea $lineNum.",
+        assistHint: "Pista del Compilador: Revisa con atención la sintaxis, tipos y modificadores de acceso en las líneas de código.",
         answerStatus: AnswerStatus.unselected,
       );
     } else if (ex is FillBlankExercise) {
@@ -327,7 +326,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       state = state.copyWith(
         isAssistModeActive: true,
         availableBlankOptions: remaining,
-        assistHint: "💡 Modo Asistencia: Descartamos 2 opciones incorrectas para ayudarte a completar el código.",
+        assistHint: "Modo Asistencia: Descartamos 2 opciones incorrectas para ayudarte a completar el código.",
         answerStatus: AnswerStatus.unselected,
       );
     }

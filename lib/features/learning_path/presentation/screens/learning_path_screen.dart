@@ -2321,7 +2321,7 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
                         const SizedBox(width: 6),
                         const Flexible(
                           child: Text(
-                            "Score Ponderado",
+                            "Puntaje Ponderado",
                             style: TextStyle(color: AppColors.textSecondary, fontSize: 10.5),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
