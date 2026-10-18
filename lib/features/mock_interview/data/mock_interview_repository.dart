@@ -7,6 +7,7 @@ import 'mock_interview_catalog.dart';
 class MockInterviewRepository {
   final String baseUrl;
   final http.Client client;
+  String? lastNotice;
 
   MockInterviewRepository({
     this.baseUrl = 'https://javaplay-app-btgxddftd2cxehhy.eastus2-01.azurewebsites.net/api',
@@ -32,6 +33,7 @@ class MockInterviewRepository {
     required String transcript,
     int durationSeconds = 45,
   }) async {
+    lastNotice = null;
     try {
       final res = await client.post(
         Uri.parse('$baseUrl/mock/evaluate'),
@@ -48,8 +50,16 @@ class MockInterviewRepository {
         if (data['evaluation'] != null) {
           return AiEvaluationResult.fromJson(data['evaluation'] as Map<String, dynamic>);
         }
+      } else if (res.statusCode == 429) {
+        lastNotice = 'Límite de evaluaciones por hora alcanzado. Evaluado con el motor local.';
+      } else if (res.statusCode == 503) {
+        lastNotice = 'Cuota diaria de IA del servidor alcanzada. Evaluado con el motor local.';
+      } else {
+        lastNotice = 'Servicio remoto no disponible. Evaluado con el motor local.';
       }
-    } catch (_) {}
+    } catch (_) {
+      lastNotice = 'Sin conexión con el servidor. Evaluado con el motor local.';
+    }
     return null;
   }
 }

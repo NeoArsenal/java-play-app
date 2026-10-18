@@ -699,6 +699,17 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
       durationSeconds: question.timeLimitSeconds - _recordingSeconds,
     );
 
+    if (mounted && _mockRepo.lastNotice != null && eval == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_mockRepo.lastNotice!),
+          backgroundColor: AppColors.surface,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+
     setState(() {
       _isEvaluatingAi = false;
       if (eval != null) {

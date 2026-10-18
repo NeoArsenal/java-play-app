@@ -33,6 +33,9 @@ El servidor carga variables de entorno mediante un parser nativo zero-dependency
 | `GEMINI_API_KEY` | String | No | `""` | Clave API de Google AI Studio para evaluar entrevistas simuladas con Gemini 1.5 Flash. Si no está configurada, el backend utiliza su motor semántico experto local de rúbricas. |
 | `ALLOWED_ORIGINS` | String | No | `""` (vacía) | Lista separada por comas de orígenes permitidos por la política CORS. Si está vacía o el origen no coincide, peticiones con cabecera `Origin` reciben 403. Peticiones sin `Origin` (móvil nativo) no son bloqueadas. |
 | `TRUSTED_PROXY_HOPS` | Entero | No | `1` | Número de saltos de proxies de confianza para resolver la IP real del cliente desde el final de `X-Forwarded-For`. |
+| `RATE_MOCK_PER_USER_HOUR` | Entero | No | `10` | Límite de evaluaciones con IA permitidas por usuario (`userId`) en una ventana de 1 hora. |
+| `RATE_MOCK_PER_IP_HOUR` | Entero | No | `30` | Límite de evaluaciones con IA permitidas por dirección IP en una ventana de 1 hora. |
+| `MOCK_GLOBAL_DAILY_CAP` | Entero | No | `500` | Tope global de evaluaciones con IA por día calendario para proteger costos de cuota de IA. Al superarse, responde 503. |
 
 ---
 
@@ -126,3 +129,4 @@ GET /api/health
 | **413 Payload Too Large** | Cuerpo Excesivo | Cuerpo de la petición superior al límite de 100 KB. |
 | **429 Too Many Requests** | Límite Excedido | Límite de tasa por IP o por usuario sobrepasado. Incluye `Retry-After`. |
 | **500 Internal Server Error** | Error del Servidor | Error no capturado. Devuelve respuesta genérica sin detalles internos. |
+| **503 Service Unavailable** | Servicio No Disponible | Tope global diario de evaluaciones con IA alcanzado (`MOCK_GLOBAL_DAILY_CAP`). |

@@ -975,6 +975,36 @@ function isValidUserId(userId) {
 }
 
 // Rate limiting en memoria por IP y por userId
+const RATE_MOCK_PER_USER_HOUR = Math.max(1, parseInt(process.env.RATE_MOCK_PER_USER_HOUR || '10', 10));
+const RATE_MOCK_PER_IP_HOUR = Math.max(1, parseInt(process.env.RATE_MOCK_PER_IP_HOUR || '30', 10));
+const MOCK_GLOBAL_DAILY_CAP = Math.max(1, parseInt(process.env.MOCK_GLOBAL_DAILY_CAP || '500', 10));
+
+let mockGlobalDailyTracker = {
+  date: new Date().toISOString().slice(0, 10),
+  count: 0
+};
+
+function checkMockGlobalDailyCap() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (mockGlobalDailyTracker.date !== today) {
+    mockGlobalDailyTracker.date = today;
+    mockGlobalDailyTracker.count = 0;
+  }
+  if (mockGlobalDailyTracker.count >= MOCK_GLOBAL_DAILY_CAP) {
+    return { capped: true, current: mockGlobalDailyTracker.count, max: MOCK_GLOBAL_DAILY_CAP };
+  }
+  return { capped: false, current: mockGlobalDailyTracker.count, max: MOCK_GLOBAL_DAILY_CAP };
+}
+
+function incrementMockGlobalDailyCount() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (mockGlobalDailyTracker.date !== today) {
+    mockGlobalDailyTracker.date = today;
+    mockGlobalDailyTracker.count = 0;
+  }
+  mockGlobalDailyTracker.count++;
+}
+
 const rateLimits = {
   mockUser: new Map(), // userId -> [timestamps]
   mockIp: new Map(),   // ip -> [timestamps]
@@ -1597,13 +1627,22 @@ const server = http.createServer(async (req, res) => {
 
   // 11. POST /api/mock/evaluate - Evaluación Semántica con IA (Gemini / Rúbrica Senior)
   if (req.method === 'POST' && url.pathname === '/api/mock/evaluate') {
-    // Rate limit por IP para evaluaciones con IA (30 / hora)
-    const ipLimit = checkRateLimit(rateLimits.mockIp, clientIp, 30, 3600000);
+    // 1. Tope global diario
+    const globalCap = checkMockGlobalDailyCap();
+    if (globalCap.capped) {
+      return sendJson(res, 503, {
+        error: 'Service Unavailable',
+        message: 'Tope global diario de evaluaciones con IA alcanzado. Intente mañana o utilice el evaluador local.'
+      }, req);
+    }
+
+    // 2. Rate limit por IP para evaluaciones con IA
+    const ipLimit = checkRateLimit(rateLimits.mockIp, clientIp, RATE_MOCK_PER_IP_HOUR, 3600000);
     if (ipLimit.limited) {
       return sendJson(res, 429, {
         error: 'Too Many Requests',
-        message: 'Límite de evaluaciones con IA por IP excedido (máximo 30 por hora).'
-      }, { 'Retry-After': String(ipLimit.retryAfter) });
+        message: `Límite de evaluaciones con IA por IP excedido (máximo ${RATE_MOCK_PER_IP_HOUR} por hora).`
+      }, req, { 'Retry-After': String(ipLimit.retryAfter) });
     }
 
     const payload = await readJsonBody(req, res);
@@ -1613,17 +1652,20 @@ const server = http.createServer(async (req, res) => {
       const { questionId, transcript, durationSeconds, userId = 'user_1' } = payload;
 
       if (!isValidUserId(userId)) {
-        return sendJson(res, 400, { error: 'Bad Request', message: 'userId no válido' });
+        return sendJson(res, 400, { error: 'Bad Request', message: 'userId no válido' }, req);
       }
 
-      // Rate limit por userId para evaluaciones con IA (10 / hora)
-      const userLimit = checkRateLimit(rateLimits.mockUser, userId, 10, 3600000);
+      // 3. Rate limit por userId para evaluaciones con IA
+      const userLimit = checkRateLimit(rateLimits.mockUser, userId, RATE_MOCK_PER_USER_HOUR, 3600000);
       if (userLimit.limited) {
         return sendJson(res, 429, {
           error: 'Too Many Requests',
-          message: 'Límite de evaluaciones con IA por usuario excedido (máximo 10 por hora).'
+          message: `Límite de evaluaciones con IA por usuario excedido (máximo ${RATE_MOCK_PER_USER_HOUR} por hora).`
         }, req, { 'Retry-After': String(userLimit.retryAfter) });
       }
+
+      // Incrementar contador global tras superar validaciones y límites
+      incrementMockGlobalDailyCount();
 
       if (typeof transcript !== 'string' || transcript.length > 3000) {
         return sendJson(res, 400, {
