@@ -15,6 +15,7 @@ import '../widgets/types/multiple_choice_view.dart';
 import '../widgets/types/code_fill_blank_view.dart';
 import '../widgets/types/token_reorder_view.dart';
 import '../widgets/types/spot_the_bug_view.dart';
+import 'lesson_result_screen.dart';
 
 class QuizScreen extends ConsumerStatefulWidget {
   final Lesson lesson;
@@ -111,7 +112,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     }
 
     if (quizState.isLessonCompleted) {
-      return _buildCompletedView(context, quizState);
+      return LessonResultScreen(quizState: quizState);
     }
 
     final currentExercise = quizState.currentExercise;
@@ -294,61 +295,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     );
   }
 
-  Widget _buildCompletedView(BuildContext context, QuizState state) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(28.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.emoji_events_rounded, color: AppColors.duolingoGold, size: 90),
-                const SizedBox(height: 20),
-                const Text(
-                  "¡Lección Completada!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "🎯 ${state.lesson.exercises.length} de ${state.lesson.exercises.length} preguntas superadas con éxito",
-                  style: const TextStyle(
-                    color: AppColors.primaryGreen,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "+${state.currentXp} XP ganados para tu preparación",
-                  style: const TextStyle(
-                    color: AppColors.duolingoGold,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 36),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    minimumSize: const Size(double.infinity, 54),
-                  ),
-                  child: const Text("CONTINUAR"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   void _confirmExit(BuildContext context) {
     showDialog(
