@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
+import '../horizontal_scroll_fade_wrapper.dart';
 
 class CodeFillBlankView extends StatefulWidget {
   final FillBlankExercise exercise;
@@ -112,65 +113,71 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
     final blankRegex = RegExp(r'_{2,}');
     int blankCounter = 0;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: lines.map((line) {
-          final parts = line.split(blankRegex);
-          if (parts.length == 1) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                line,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 14,
-                  color: AppColors.codeText,
-                  height: 1.4,
-                ),
-              ),
-            );
-          }
-
-          final lineSpans = <Widget>[];
-          for (int p = 0; p < parts.length; p++) {
-            if (parts[p].isNotEmpty) {
-              lineSpans.add(
-                Text(
-                  parts[p],
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 14,
-                    color: AppColors.codeText,
-                    height: 1.4,
+    return HorizontalScrollFadeWrapper(
+      fadeColor: AppColors.codeBackground,
+      builder: (context, controller) {
+        return SingleChildScrollView(
+          controller: controller,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: lines.map((line) {
+              final parts = line.split(blankRegex);
+              if (parts.length == 1) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    line,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 14,
+                      color: AppColors.codeText,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              );
-            }
-            if (p < parts.length - 1) {
-              final bIndex = blankCounter;
-              blankCounter++;
-              lineSpans.add(
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: _buildBlankSlot(bIndex),
-                ),
-              );
-            }
-          }
+                );
+              }
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: lineSpans,
-            ),
-          );
-        }).toList(),
-      ),
+              final lineSpans = <Widget>[];
+              for (int p = 0; p < parts.length; p++) {
+                if (parts[p].isNotEmpty) {
+                  lineSpans.add(
+                    Text(
+                      parts[p],
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 14,
+                        color: AppColors.codeText,
+                        height: 1.4,
+                      ),
+                    ),
+                  );
+                }
+                if (p < parts.length - 1) {
+                  final bIndex = blankCounter;
+                  blankCounter++;
+                  lineSpans.add(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: _buildBlankSlot(bIndex),
+                    ),
+                  );
+                }
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: lineSpans,
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 

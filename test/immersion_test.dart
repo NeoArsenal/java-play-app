@@ -12,6 +12,7 @@ import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
 import 'package:java_play_app/features/quiz/presentation/controllers/quiz_controller.dart';
 import 'package:java_play_app/features/quiz/presentation/screens/quiz_screen.dart';
 import 'package:java_play_app/features/quiz/presentation/widgets/feedback_bottom_sheet.dart';
+import 'package:java_play_app/features/quiz/presentation/widgets/horizontal_scroll_fade_wrapper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -287,6 +288,63 @@ void main() {
       expect(mascotWidget.state, equals(MascotState.happy));
     });
   });
+
+  group('HorizontalScrollFadeWrapper Widget Tests', () {
+    testWidgets('does not show fade indicator when content fits without horizontal overflow', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 400,
+              child: HorizontalScrollFadeWrapper(
+                builder: (context, controller) {
+                  return SingleChildScrollView(
+                    controller: controller,
+                    scrollDirection: Axis.horizontal,
+                    child: const SizedBox(
+                      width: 200, // smaller than 400
+                      child: Text('Short code line'),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+    });
+
+    testWidgets('shows fade indicator when content overflows horizontally', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 200,
+              child: HorizontalScrollFadeWrapper(
+                builder: (context, controller) {
+                  return SingleChildScrollView(
+                    controller: controller,
+                    scrollDirection: Axis.horizontal,
+                    child: const SizedBox(
+                      width: 600, // overflows 200
+                      child: Text('Very long code line that overflows container width significantly'),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+    });
+  });
 }
+
 
 
