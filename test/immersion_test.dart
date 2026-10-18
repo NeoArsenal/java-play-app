@@ -6,6 +6,10 @@ import 'package:java_play_app/core/services/feedback_service.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
 import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
+import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
+import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
+import 'package:java_play_app/features/quiz/presentation/controllers/quiz_controller.dart';
+import 'package:java_play_app/features/quiz/presentation/widgets/feedback_bottom_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -163,4 +167,81 @@ void main() {
       expect(find.byType(BugEnemyWidget), findsOneWidget);
     });
   });
+
+  group('FeedbackBottomSheet UX Tests', () {
+    const dummyExercise = MultipleChoiceExercise(
+      id: 'test_ex_1',
+      question: '¿Qué palabra define una clase en Java?',
+      options: ['class', 'def', 'struct'],
+      correctAnswerIndex: 0,
+      explanation: 'class es la palabra reservada en Java.',
+    );
+
+    const dummyLesson = Lesson(
+      id: 'test_lesson_1',
+      title: 'Lección de prueba',
+      xpReward: 10,
+      exercises: [dummyExercise],
+    );
+
+    testWidgets('shows large Javi (96px) and no bug when answer is correct', (tester) async {
+      final quizState = QuizState(
+        lesson: dummyLesson,
+        answerStatus: AnswerStatus.correct,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FeedbackBottomSheet(
+              state: quizState,
+              mascotState: MascotState.happy,
+              onVerify: () {},
+              onContinue: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(MascotWidget), findsOneWidget);
+      final mascotWidget = tester.widget<MascotWidget>(find.byType(MascotWidget));
+      expect(mascotWidget.size, equals(96.0));
+      expect(mascotWidget.state, equals(MascotState.happy));
+      expect(find.byType(BugEnemyWidget), findsNothing);
+      expect(find.text('¡Excelente respuesta!'), findsOneWidget);
+      expect(find.text(dummyExercise.explanation), findsOneWidget);
+    });
+
+    testWidgets('shows Javi sad and Bug (40px) when answer is incorrect', (tester) async {
+      final quizState = QuizState(
+        lesson: dummyLesson,
+        answerStatus: AnswerStatus.incorrect,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FeedbackBottomSheet(
+              state: quizState,
+              mascotState: MascotState.sad,
+              bugState: BugEnemyState.glitch,
+              onVerify: () {},
+              onContinue: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(MascotWidget), findsOneWidget);
+      final mascotWidget = tester.widget<MascotWidget>(find.byType(MascotWidget));
+      expect(mascotWidget.size, equals(96.0));
+      expect(mascotWidget.state, equals(MascotState.sad));
+
+      expect(find.byType(BugEnemyWidget), findsOneWidget);
+      final bugWidget = tester.widget<BugEnemyWidget>(find.byType(BugEnemyWidget));
+      expect(bugWidget.size, equals(40.0));
+      expect(find.text('Solución incorrecta'), findsOneWidget);
+    });
+  });
 }
+
