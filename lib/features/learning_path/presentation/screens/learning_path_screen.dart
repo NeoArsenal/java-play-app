@@ -16,6 +16,7 @@ import 'package:java_play_app/features/quiz/presentation/screens/quiz_screen.dar
 import 'package:java_play_app/features/quiz/presentation/screens/boss_challenge_screen.dart';
 import 'package:java_play_app/features/learning_path/data/boss_repository.dart';
 import 'package:java_play_app/core/services/user_service.dart';
+import 'package:java_play_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 enum AppTab { path, srs, mock }
@@ -866,6 +867,18 @@ class _LearningPathScreenState extends State<LearningPathScreen> with SingleTick
           ),
         ],
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+          tooltip: 'Ajustes e Inmersión',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          },
+        ),
+      ],
     );
   }
 
