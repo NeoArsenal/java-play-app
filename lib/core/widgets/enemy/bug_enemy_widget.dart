@@ -39,6 +39,11 @@ class _BugEnemyWidgetState extends State<BugEnemyWidget>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _syncAnimation();
   }
 
