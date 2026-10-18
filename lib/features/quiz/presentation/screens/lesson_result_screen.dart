@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/services/feedback_service.dart';
 import 'package:java_play_app/core/services/feedback_settings.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
@@ -24,6 +25,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      FeedbackService.instance.onLessonComplete();
       if (!FeedbackSettings.isReducedMotion(context)) {
         _confettiController.play();
       }

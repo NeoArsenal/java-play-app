@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/services/feedback_service.dart';
 import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
 import 'package:java_play_app/features/learning_path/domain/models/world.dart';
 import 'package:java_play_app/features/learning_path/domain/models/boss_challenge.dart';
@@ -165,9 +166,11 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
       _wasLastCorrect = isCorrect;
 
       if (isCorrect) {
+        FeedbackService.instance.onBossHit();
         final damage = 100.0 / _exercises.length;
         _bossHp = (_bossHp - damage).clamp(0.0, 100.0);
       } else {
+        FeedbackService.instance.onWrong();
         _playerLives--;
       }
     });
@@ -197,6 +200,7 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
 
   Future<void> _onVictory() async {
     _timer?.cancel();
+    FeedbackService.instance.onLessonComplete();
     setState(() {
       _isFinished = true;
       _isVictory = true;

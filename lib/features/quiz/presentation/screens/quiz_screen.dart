@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/services/feedback_service.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
 import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
@@ -76,6 +77,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
 
       // Correct answer
       if (next.answerStatus == AnswerStatus.correct && previous.answerStatus != AnswerStatus.correct) {
+        FeedbackService.instance.onCorrect();
         _consecutiveCorrect++;
         setState(() {
           _mascotState = _consecutiveCorrect >= 3 ? MascotState.celebrate : MascotState.happy;
@@ -94,6 +96,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
 
       // Incorrect answer
       if (next.answerStatus == AnswerStatus.incorrect && previous.answerStatus != AnswerStatus.incorrect) {
+        FeedbackService.instance.onWrong();
         _consecutiveCorrect = 0;
         setState(() {
           _mascotState = MascotState.sad;
