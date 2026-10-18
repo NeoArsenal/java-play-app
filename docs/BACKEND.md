@@ -31,7 +31,8 @@ El servidor carga variables de entorno mediante un parser nativo zero-dependency
 | `DB_PASSWORD` | String | No | `""` | Contraseña de PostgreSQL. |
 | `DB_NAME` | String | No | `"postgres"` | Nombre de la base de datos. |
 | `GEMINI_API_KEY` | String | No | `""` | Clave API de Google AI Studio para evaluar entrevistas simuladas con Gemini 1.5 Flash. Si no está configurada, el backend utiliza su motor semántico experto local de rúbricas. |
-| `ALLOWED_ORIGINS` | String | No | `http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000,https://javaplay-app.azurewebsites.net` | Lista separada por comas de orígenes permitidos por la política CORS del navegador. |
+| `ALLOWED_ORIGINS` | String | No | `""` (vacía) | Lista separada por comas de orígenes permitidos por la política CORS. Si está vacía o el origen no coincide, peticiones con cabecera `Origin` reciben 403. Peticiones sin `Origin` (móvil nativo) no son bloqueadas. |
+| `TRUSTED_PROXY_HOPS` | Entero | No | `1` | Número de saltos de proxies de confianza para resolver la IP real del cliente desde el final de `X-Forwarded-For`. |
 
 ---
 
@@ -48,14 +49,20 @@ El servidor carga variables de entorno mediante un parser nativo zero-dependency
 - Límite global: `MAX_BODY_SIZE = 100 * 1024` bytes (100 KB).
 - Si el header `Content-Length` o el flujo de datos acumulado excede los 100 KB, el socket se destruye de inmediato y el servidor responde con **HTTP 413 Payload Too Large**.
 
-### 3.3 Rate Limiting en Memoria con Ventana Deslizante
+### 3.3 Rate Limiting en Memoria y Detección Segura de IP
 El rate limiting se evalúa en memoria mediante registros temporales por clave:
 - **/api/mock/evaluate**:
   - Máximo **10 peticiones / hora** por `userId`.
   - Máximo **30 peticiones / hora** por `IP`.
 - **Resto de la API (`/api/*`)**:
   - Máximo **300 peticiones / minuto** por `IP`.
-- **Soporte de Proxies (Azure / Render / CDN)**: La función `getClientIp(req)` extrae la IP cliente real tomando el primer valor del encabezado `X-Forwarded-For`.
+- **Detección segura de IP y mitigación de IP Spoofing**:
+  - La función `getClientIp(req)` normaliza y limpia puertos tanto en formato IPv4 (`192.168.1.1:8080` -> `192.168.1.1`) como IPv6 (`[2001:db8::1]:443` -> `2001:db8::1`).
+  - **No confía en el primer elemento de `X-Forwarded-For`**: Si un atacante envía `X-Forwarded-For: 1.1.1.1`, un proxy inverso honesto añadirá la IP real al final (`X-Forwarded-For: 1.1.1.1, <IP_REAL>`). Por ende, el servidor cuenta desde el **final** de la lista usando `TRUSTED_PROXY_HOPS` (por defecto `1`), seleccionando la IP en el índice `ips.length - TRUSTED_PROXY_HOPS`. Si no hay cabecera o la lista es insuficiente, recurre a `req.socket.remoteAddress`.
+- **Cómo verificar en Azure**:
+  - En Azure App Service estándar, la capa ARR (Application Request Routing) actúa como 1 salto de proxy inverso (`TRUSTED_PROXY_HOPS=1`).
+  - Si se añade una capa perimetral adicional (como Azure Front Door, Cloudflare o un Application Gateway), habrá 2 proxies en cadena (`TRUSTED_PROXY_HOPS=2`).
+  - Para verificarlo en Azure: efectúa una petición de prueba desde una IP pública conocida (ej. curl desde tu terminal local o datos móviles) inspeccionando los logs de diagnóstico de Azure o consultando un endpoint de diagnóstico; cuenta las IPs separadas por coma en `X-Forwarded-For` y ajusta `TRUSTED_PROXY_HOPS` al número de proxies controlados.
 - **Respuesta 429**: Cuando se excede el límite, el servidor responde con **HTTP 429 Too Many Requests** e incluye la cabecera estándar `Retry-After: <segundos_restantes>`.
 - **Limpieza periódica**: Un temporizador no bloqueante (`unref()`) purga entradas inactivas cada 10 minutos para evitar fugas de memoria.
 

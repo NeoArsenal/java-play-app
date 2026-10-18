@@ -987,12 +987,40 @@ function maskUserId(userId) {
   return userId.substring(0, 4) + '...' + userId.substring(userId.length - 4);
 }
 
+const TRUSTED_PROXY_HOPS = Math.max(1, parseInt(process.env.TRUSTED_PROXY_HOPS || '1', 10));
+
+function stripPort(ipStr) {
+  if (!ipStr || typeof ipStr !== 'string') return '';
+  let ip = ipStr.trim();
+  if (ip.startsWith('[')) {
+    const bracketEnd = ip.indexOf(']');
+    if (bracketEnd !== -1) {
+      ip = ip.substring(1, bracketEnd);
+    }
+  } else if (ip.includes(':')) {
+    const colonCount = (ip.match(/:/g) || []).length;
+    if (colonCount === 1) {
+      ip = ip.split(':')[0];
+    }
+  }
+  if (ip.startsWith('::ffff:')) {
+    ip = ip.substring(7);
+  }
+  return ip.trim();
+}
+
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded && typeof forwarded === 'string') {
-    return forwarded.split(',')[0].trim();
+    const ips = forwarded.split(',').map(s => stripPort(s.trim())).filter(Boolean);
+    if (ips.length > 0) {
+      const targetIndex = ips.length - TRUSTED_PROXY_HOPS;
+      const selectedIp = targetIndex >= 0 ? ips[targetIndex] : ips[0];
+      if (selectedIp) return selectedIp;
+    }
   }
-  return req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
+  const rawRemote = req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
+  return stripPort(rawRemote) || '127.0.0.1';
 }
 
 function checkRateLimit(map, key, maxRequests, windowMs) {
