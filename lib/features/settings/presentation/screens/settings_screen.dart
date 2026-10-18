@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: const Icon(Icons.volume_up_rounded, color: AppColors.primary),
+                  secondary: const Icon(Icons.volume_up_rounded, color: AppColors.primaryGreen),
                   title: const Text(
                     'Efectos de sonido',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
@@ -68,7 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   value: _sound,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primaryGreen,
                   onChanged: (val) {
                     setState(() => _sound = val);
                     FeedbackSettings.isSoundEnabled = val;
@@ -86,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   value: _vibration,
-                  activeColor: AppColors.duolingoOrange,
+                  activeThumbColor: AppColors.duolingoOrange,
                   onChanged: (val) {
                     setState(() => _vibration = val);
                     FeedbackSettings.isVibrationEnabled = val;
@@ -126,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
               value: _reducedMotion,
-              activeColor: AppColors.duolingoBlue,
+              activeThumbColor: AppColors.duolingoBlue,
               onChanged: (val) {
                 setState(() => _reducedMotion = val);
                 FeedbackSettings.userReducedMotionOverride = val;

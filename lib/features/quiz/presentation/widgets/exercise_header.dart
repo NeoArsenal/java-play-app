@@ -7,6 +7,7 @@ class ExerciseHeader extends StatelessWidget implements PreferredSizeWidget {
   final int currentIndex;
   final int totalExercises;
   final VoidCallback onClose;
+  final Widget? mascot;
 
   const ExerciseHeader({
     super.key,
@@ -15,6 +16,7 @@ class ExerciseHeader extends StatelessWidget implements PreferredSizeWidget {
     this.currentIndex = 1,
     this.totalExercises = 7,
     required this.onClose,
+    this.mascot,
   });
 
   @override
@@ -41,6 +43,10 @@ class ExerciseHeader extends StatelessWidget implements PreferredSizeWidget {
               icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 26),
               onPressed: onClose,
             ),
+            if (mascot != null) ...[
+              mascot!,
+              const SizedBox(width: 8),
+            ],
             const SizedBox(width: 4),
             Expanded(
               child: Column(

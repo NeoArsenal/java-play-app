@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
+import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
 import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import '../controllers/quiz_controller.dart';
@@ -12,15 +16,95 @@ import '../widgets/types/code_fill_blank_view.dart';
 import '../widgets/types/token_reorder_view.dart';
 import '../widgets/types/spot_the_bug_view.dart';
 
-class QuizScreen extends ConsumerWidget {
+class QuizScreen extends ConsumerStatefulWidget {
   final Lesson lesson;
 
   const QuizScreen({super.key, required this.lesson});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final quizState = ref.watch(quizProvider(lesson));
-    final quizNotifier = ref.read(quizProvider(lesson).notifier);
+  ConsumerState<QuizScreen> createState() => _QuizScreenState();
+}
+
+class _QuizScreenState extends ConsumerState<QuizScreen> {
+  MascotState _mascotState = MascotState.thinking;
+  Timer? _idleTimer;
+  Timer? _bugDefeatedTimer;
+  int _consecutiveCorrect = 0;
+  bool _showBug = false;
+  BugEnemyState _bugState = BugEnemyState.glitch;
+
+  @override
+  void initState() {
+    super.initState();
+    _startIdleTimer();
+  }
+
+  void _startIdleTimer() {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _mascotState = MascotState.idle;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    _bugDefeatedTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<QuizState>(quizProvider(widget.lesson), (previous, next) {
+      if (previous == null) return;
+
+      // Question changed
+      if (next.currentExerciseIndex != previous.currentExerciseIndex) {
+        setState(() {
+          _mascotState = MascotState.thinking;
+          if (_bugState == BugEnemyState.defeated) {
+            _showBug = false;
+          }
+        });
+        _startIdleTimer();
+      }
+
+      // Correct answer
+      if (next.answerStatus == AnswerStatus.correct && previous.answerStatus != AnswerStatus.correct) {
+        _consecutiveCorrect++;
+        setState(() {
+          _mascotState = _consecutiveCorrect >= 3 ? MascotState.celebrate : MascotState.happy;
+          if (_showBug) {
+            _bugState = BugEnemyState.defeated;
+            _bugDefeatedTimer?.cancel();
+            _bugDefeatedTimer = Timer(const Duration(milliseconds: 1000), () {
+              if (mounted) {
+                setState(() => _showBug = false);
+              }
+            });
+          }
+        });
+        _startIdleTimer();
+      }
+
+      // Incorrect answer
+      if (next.answerStatus == AnswerStatus.incorrect && previous.answerStatus != AnswerStatus.incorrect) {
+        _consecutiveCorrect = 0;
+        setState(() {
+          _mascotState = MascotState.sad;
+          _showBug = true;
+          _bugState = BugEnemyState.glitch;
+        });
+        _startIdleTimer();
+      }
+    });
+
+    final quizState = ref.watch(quizProvider(widget.lesson));
+    final quizNotifier = ref.read(quizProvider(widget.lesson).notifier);
 
     if (quizState.isGameOver) {
       return _buildGameOverView(context);
@@ -46,10 +130,37 @@ class QuizScreen extends ConsumerWidget {
           currentIndex: quizState.currentExerciseIndex + 1,
           totalExercises: quizState.lesson.exercises.length,
           onClose: () => _confirmExit(context),
+          mascot: MascotWidget(state: _mascotState, size: 34),
         ),
         body: SafeArea(
           child: Column(
             children: [
+              if (_showBug)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF261219),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.errorRed.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      BugEnemyWidget(state: _bugState, size: 40),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          "¡Bug detectado en el código! Corrige la respuesta para derrotarlo.",
+                          style: TextStyle(
+                            color: Color(0xFFFF9E9E),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
