@@ -41,3 +41,4 @@ flutter:
   assets:
     - assets/data/curriculum.json
     - assets/branding/app_icon.png
+    - assets/sounds/

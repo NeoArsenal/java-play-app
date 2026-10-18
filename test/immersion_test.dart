@@ -26,34 +26,44 @@ void main() {
   });
 
   group('FeedbackService Unit Tests', () {
-    test('calls all feedback methods silently when audio files are absent', () async {
+    test('completa sin lanzar cuando los archivos de audio están ausentes (modo silencioso)', () async {
       final service = FeedbackService();
 
-      // Sound and vibration enabled by default; files don't exist in test environment
-      expect(() async => await service.onCorrect(), returnsNormally);
-      expect(() async => await service.onWrong(), returnsNormally);
-      expect(() async => await service.onLessonComplete(), returnsNormally);
-      expect(() async => await service.onBossHit(), returnsNormally);
+      await service.onCorrect();
+      await service.onWrong();
+      await service.onLessonComplete();
+      await service.onBossHit();
     });
 
-    test('executes cleanly when sound is disabled', () async {
+    test('completa limpiamente cuando el sonido está desactivado', () async {
       FeedbackSettings.isSoundEnabled = false;
       final service = FeedbackService();
 
-      expect(() async => await service.onCorrect(), returnsNormally);
-      expect(() async => await service.onWrong(), returnsNormally);
-      expect(() async => await service.onLessonComplete(), returnsNormally);
-      expect(() async => await service.onBossHit(), returnsNormally);
+      await service.onCorrect();
+      await service.onWrong();
+      await service.onLessonComplete();
+      await service.onBossHit();
     });
 
-    test('executes cleanly when vibration is disabled', () async {
+    test('completa limpiamente cuando la vibración está desactivada', () async {
       FeedbackSettings.isVibrationEnabled = false;
       final service = FeedbackService();
 
-      expect(() async => await service.onCorrect(), returnsNormally);
-      expect(() async => await service.onWrong(), returnsNormally);
-      expect(() async => await service.onLessonComplete(), returnsNormally);
-      expect(() async => await service.onBossHit(), returnsNormally);
+      await service.onCorrect();
+      await service.onWrong();
+      await service.onLessonComplete();
+      await service.onBossHit();
+    });
+
+    test('completa limpiamente con sonido y vibración desactivados', () async {
+      FeedbackSettings.isSoundEnabled = false;
+      FeedbackSettings.isVibrationEnabled = false;
+      final service = FeedbackService();
+
+      await service.onCorrect();
+      await service.onWrong();
+      await service.onLessonComplete();
+      await service.onBossHit();
     });
   });
 
