@@ -1100,17 +1100,10 @@ function readCurriculum() {
 // CORS: CONFIGURACIÓN DE ORÍGENES PERMITIDOS
 // ==============================================================
 
-const DEFAULT_ALLOWED_ORIGINS = [
-  'http://localhost:8080',
-  'http://127.0.0.1:8080',
-  'http://localhost:3000',
-  'https://javaplay-app.azurewebsites.net'
-];
-
 const rawAllowedOrigins = process.env.ALLOWED_ORIGINS;
 const ALLOWED_ORIGINS = rawAllowedOrigins
   ? rawAllowedOrigins.split(',').map(s => s.trim()).filter(Boolean)
-  : DEFAULT_ALLOWED_ORIGINS;
+  : [];
 
 function getCorsHeaders(req) {
   const headers = {
@@ -1162,17 +1155,19 @@ const server = http.createServer(async (req, res) => {
     }
     const clientIp = getClientIp(req);
 
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
+    // Verificación CORS: si incluye Origin y no está en ALLOWED_ORIGINS, rechazar con 403
     const origin = req.headers['origin'];
     if (origin && !ALLOWED_ORIGINS.includes(origin)) {
       res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
       return res.end(JSON.stringify({ error: 'Forbidden', message: 'Origen no permitido por política CORS' }));
     }
-    const cors = getCorsHeaders(req);
-    res.writeHead(204, cors);
-    return res.end();
-  }
+
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      const cors = getCorsHeaders(req);
+      res.writeHead(204, cors);
+      return res.end();
+    }
 
   // Rate limiting general por IP para endpoints /api/ (300 peticiones / minuto)
   if (url.pathname.startsWith('/api/')) {
