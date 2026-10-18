@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
+import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import 'package:java_play_app/features/quiz/presentation/controllers/quiz_controller.dart';
+import 'package:java_play_app/features/quiz/presentation/screens/quiz_screen.dart';
 import 'package:java_play_app/features/quiz/presentation/widgets/types/spot_the_bug_view.dart';
 import 'package:java_play_app/features/quiz/presentation/widgets/types/code_fill_blank_view.dart';
 
@@ -197,4 +202,50 @@ void main() {
     final lineNum1PosAfter = tester.getTopLeft(find.text('1'));
     expect(lineNum1PosAfter.dx, equals(lineNum1PosBefore.dx));
   });
+
+  testWidgets('QuizScreen: muestra Javi thinking si sobran más de 160 px en espacio vacío y lo oculta si no', (tester) async {
+    tester.view.physicalSize = const Size(360, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const simpleLesson = Lesson(
+      id: 'test_lesson_empty_space',
+      title: 'Lección de prueba',
+      xpReward: 10,
+      exercises: [
+        MultipleChoiceExercise(
+          id: 'ex_short',
+          question: '¿Java es compilado?',
+          options: ['Sí', 'No'],
+          correctAnswerIndex: 0,
+          explanation: 'Compilado a bytecode.',
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: QuizScreen(lesson: simpleLesson),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // En pantalla alta de 900dp con ejercicio corto, sobra > 160 px -> Javi thinking presente
+    final mascotFinder = find.byWidgetPredicate(
+      (w) => w is MascotWidget && w.state == MascotState.thinking && w.size == 88.0,
+    );
+    expect(mascotFinder, findsOneWidget);
+
+    // Reducir la pantalla a altura donde no sobran 160 px (ej. 360 x 300)
+    tester.view.physicalSize = const Size(360, 300);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(mascotFinder, findsNothing);
+  });
 }
+

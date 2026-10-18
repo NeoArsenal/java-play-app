@@ -61,6 +61,7 @@ class QuizState {
   Exercise get currentExercise => lesson.exercises[currentExerciseIndex];
   double get progressRatio => (currentExerciseIndex + 1) / lesson.exercises.length;
   bool get isGameOver => lives <= 0;
+  bool get isAnswered => answerStatus == AnswerStatus.correct || answerStatus == AnswerStatus.incorrect;
 
   QuizState copyWith({
     int? currentExerciseIndex,

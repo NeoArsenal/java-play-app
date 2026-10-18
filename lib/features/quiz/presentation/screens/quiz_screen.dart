@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
 import 'package:java_play_app/core/services/feedback_service.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
+import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
 import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
 import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
@@ -157,9 +158,14 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             child: Column(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: _buildExerciseBody(currentExercise, quizState, quizNotifier),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return _EmptySpaceMascotWrapper(
+                        availableHeight: constraints.maxHeight,
+                        isAnswered: quizState.isAnswered,
+                        child: _buildExerciseBody(currentExercise, quizState, quizNotifier),
+                      );
+                    },
                   ),
                 ),
                 FeedbackBottomSheet(
@@ -319,3 +325,78 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     );
   }
 }
+
+class _EmptySpaceMascotWrapper extends StatefulWidget {
+  final double availableHeight;
+  final Widget child;
+  final bool isAnswered;
+
+  const _EmptySpaceMascotWrapper({
+    required this.availableHeight,
+    required this.child,
+    required this.isAnswered,
+  });
+
+  @override
+  State<_EmptySpaceMascotWrapper> createState() => _EmptySpaceMascotWrapperState();
+}
+
+class _EmptySpaceMascotWrapperState extends State<_EmptySpaceMascotWrapper> {
+  final GlobalKey _contentKey = GlobalKey();
+  double _contentHeight = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  @override
+  void didUpdateWidget(covariant _EmptySpaceMascotWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  void _measure() {
+    final renderBox = _contentKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null && renderBox.hasSize && mounted) {
+      if ((renderBox.size.height - _contentHeight).abs() > 1) {
+        setState(() {
+          _contentHeight = renderBox.size.height;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final freeSpace = widget.availableHeight - _contentHeight - 32;
+    final showMascot = freeSpace > 160 && !widget.isAnswered && _contentHeight > 0;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          KeyedSubtree(
+            key: _contentKey,
+            child: widget.child,
+          ),
+          if (showMascot) ...[
+            SizedBox(
+              height: (freeSpace - 96).clamp(16.0, double.infinity),
+            ),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: MascotWidget(
+                state: MascotState.thinking,
+                size: 88,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
