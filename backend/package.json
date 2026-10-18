@@ -1,7 +1,7 @@
 {
   "name": "javaplay-backend",
   "version": "1.0.0",
-  "description": "JavaPlay Backend API & Web App",
+  "description": "JavaPlay Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

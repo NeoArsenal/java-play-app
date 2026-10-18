@@ -1083,10 +1083,13 @@ function readJsonBody(req, res) {
   });
 }
 
+let cachedCurriculum = null;
 function readCurriculum() {
+  if (cachedCurriculum) return cachedCurriculum;
   try {
     const raw = fs.readFileSync(CURRICULUM_PATH, 'utf8');
-    return JSON.parse(raw);
+    cachedCurriculum = JSON.parse(raw);
+    return cachedCurriculum;
   } catch (e) {
     console.error('Error reading curriculum.json:', e.message);
     return { worlds: [], mockInterviews: [] };
@@ -1182,13 +1185,9 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // 0. Serve Frontend Web Preview (Render Cloud & Local Host)
-  if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/app')) {
-    const indexPath = path.join(__dirname, '../web_preview/index.html');
-    if (fs.existsSync(indexPath)) {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(fs.readFileSync(indexPath, 'utf8'));
-    }
+  // 0. Root Endpoint
+  if (req.method === 'GET' && url.pathname === '/') {
+    return sendJson(res, 200, { service: 'JavaPlay API', status: 'UP' }, req);
   }
 
   // 1. Healthcheck

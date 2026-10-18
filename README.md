@@ -1,4 +1,4 @@
-# Java & Spring Boot Interview Duolingo 🚀 (Flutter + Web Preview)
+# JavaPlay 🚀 (Flutter App)
 
 Aplicación móvil gamificada estilo **Duolingo** diseñada para preparar entrevistas técnicas en **Java** y **Spring Boot** (JVM Internals, Colecciones, Concurrencia, Scopes, Proxies de Spring, Transacciones y JPA).
 
@@ -56,17 +56,6 @@ lib/
 
 ---
 
-## ⚡ Cómo Probar el Prototipo Web Inmediatamente
-No necesitas esperar a instalar o configurar Flutter SDK. Puedes abrir el prototipo interactivo con todos los ejercicios y sonidos en tu navegador:
-
-1. Abre directamente con tu navegador el archivo:
-   `web_preview/index.html`
-2. O levanta un servidor local:
-   ```bash
-   npx serve web_preview
-   ```
-
----
 
 ## 📱 Cómo Ejecutar la App en Flutter
 Una vez tengas configurado Flutter en tu sistema:
