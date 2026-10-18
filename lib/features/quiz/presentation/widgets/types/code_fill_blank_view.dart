@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/utils/java_syntax_highlighter.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import '../horizontal_scroll_fade_wrapper.dart';
 
@@ -193,16 +194,19 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
                           for (int p = 0; p < parts.length; p++) {
                             if (parts[p].isNotEmpty) {
                               lineSpans.add(
-                                Text(
-                                  parts[p],
+                                Text.rich(
+                                  TextSpan(
+                                    children: JavaSyntaxHighlighter.highlightLine(
+                                      parts[p],
+                                      baseStyle: const TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 13.5,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
                                   softWrap: false,
                                   textScaler: textScaler,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontSize: 13.5,
-                                    color: AppColors.codeText,
-                                    height: 1.4,
-                                  ),
                                 ),
                               );
                             }

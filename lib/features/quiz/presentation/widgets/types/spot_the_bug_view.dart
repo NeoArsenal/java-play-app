@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:java_play_app/core/constants/app_colors.dart';
+import 'package:java_play_app/core/utils/java_syntax_highlighter.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import 'package:java_play_app/features/quiz/presentation/controllers/quiz_controller.dart';
 import '../horizontal_scroll_fade_wrapper.dart';
@@ -267,17 +268,34 @@ class SpotTheBugView extends StatelessWidget {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(
-                                            exercise.codeLines[index],
-                                            softWrap: false,
-                                            textScaler: textScaler,
-                                            style: TextStyle(
-                                              fontFamily: 'monospace',
-                                              fontSize: 13.5,
-                                              color: codeTextColor,
-                                              fontWeight: codeWeight,
+                                          if (!isSelected && (!isAnswered || !isCorrectLine)) ...[
+                                            Text.rich(
+                                              TextSpan(
+                                                children: JavaSyntaxHighlighter.highlightLine(
+                                                  exercise.codeLines[index],
+                                                  baseStyle: TextStyle(
+                                                    fontFamily: 'monospace',
+                                                    fontSize: 13.5,
+                                                    color: isAnswered ? AppColors.textDisabled : null,
+                                                  ),
+                                                ),
+                                              ),
+                                              softWrap: false,
+                                              textScaler: textScaler,
                                             ),
-                                          ),
+                                          ] else ...[
+                                            Text(
+                                              exercise.codeLines[index],
+                                              softWrap: false,
+                                              textScaler: textScaler,
+                                              style: TextStyle(
+                                                fontFamily: 'monospace',
+                                                fontSize: 13.5,
+                                                color: codeTextColor,
+                                                fontWeight: codeWeight,
+                                              ),
+                                            ),
+                                          ],
                                           if (rowIcon != null) ...[
                                             const SizedBox(width: 14),
                                             Icon(
