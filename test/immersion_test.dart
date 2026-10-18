@@ -6,9 +6,11 @@ import 'package:java_play_app/core/services/feedback_service.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_state.dart';
 import 'package:java_play_app/core/widgets/mascot/mascot_widget.dart';
 import 'package:java_play_app/core/widgets/enemy/bug_enemy_widget.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:java_play_app/features/quiz/domain/models/exercise.dart';
 import 'package:java_play_app/features/learning_path/domain/models/lesson.dart';
 import 'package:java_play_app/features/quiz/presentation/controllers/quiz_controller.dart';
+import 'package:java_play_app/features/quiz/presentation/screens/quiz_screen.dart';
 import 'package:java_play_app/features/quiz/presentation/widgets/feedback_bottom_sheet.dart';
 
 void main() {
@@ -242,6 +244,49 @@ void main() {
       expect(bugWidget.size, equals(40.0));
       expect(find.text('Solución incorrecta'), findsOneWidget);
     });
+
+    testWidgets('touching screen after answering keeps Javi in happy/sad state (does NOT return to thinking)', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: QuizScreen(lesson: dummyLesson),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Initially on Multiple Choice question
+      expect(find.text('¿Qué palabra define una clase en Java?'), findsOneWidget);
+
+      // Select correct option 'class'
+      await tester.tap(find.text('class'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Tap verify
+      await tester.tap(find.text('COMPROBAR'));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Mascot is now happy
+      expect(find.byType(MascotWidget), findsOneWidget);
+      var mascotWidget = tester.widget<MascotWidget>(find.byType(MascotWidget));
+      expect(mascotWidget.state, equals(MascotState.happy));
+
+      // Tap the screen
+      await tester.tap(find.text('¿Qué palabra define una clase en Java?'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Mascot must STILL be happy (NOT thinking)
+      mascotWidget = tester.widget<MascotWidget>(find.byType(MascotWidget));
+      expect(mascotWidget.state, equals(MascotState.happy));
+
+      // Advance time beyond inactivity duration (25 seconds)
+      await tester.pump(const Duration(seconds: 25));
+
+      // Mascot must STILL be happy (NOT idle or thinking)
+      mascotWidget = tester.widget<MascotWidget>(find.byType(MascotWidget));
+      expect(mascotWidget.state, equals(MascotState.happy));
+    });
   });
 }
+
 

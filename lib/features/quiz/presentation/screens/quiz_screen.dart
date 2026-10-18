@@ -47,13 +47,18 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     _inactivityTimer = Timer(_inactivityDuration, () {
       if (mounted) {
         setState(() {
-          _mascotState = MascotState.idle;
+          if (_mascotState == MascotState.thinking) {
+            _mascotState = MascotState.idle;
+          }
         });
       }
     });
   }
 
-  void _onUserInteraction() {
+  void _onUserInteraction(QuizState quizState) {
+    if (quizState.answerStatus != AnswerStatus.unselected) {
+      return;
+    }
     if (_mascotState == MascotState.idle) {
       setState(() {
         _mascotState = MascotState.thinking;
@@ -148,7 +153,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
         body: SafeArea(
           child: Listener(
             behavior: HitTestBehavior.translucent,
-            onPointerDown: (_) => _onUserInteraction(),
+            onPointerDown: (_) => _onUserInteraction(quizState),
             child: Column(
               children: [
                 Expanded(
