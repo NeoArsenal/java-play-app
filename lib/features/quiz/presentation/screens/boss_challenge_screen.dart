@@ -533,6 +533,9 @@ class _BossChallengeScreenState extends State<BossChallengeScreen> with SingleTi
       return SpotTheBugView(
         exercise: exercise,
         selectedLineIndex: _selectedBugLineIndex,
+        answerStatus: _isVerified
+            ? (_isCorrect ? AnswerStatus.correct : AnswerStatus.incorrect)
+            : AnswerStatus.unselected,
         onSelectLine: (idx) {
           if (!_isVerified) setState(() => _selectedBugLineIndex = idx);
         },

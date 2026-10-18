@@ -108,74 +108,143 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
     }
   }
 
-  Widget _buildCodeTemplateContent() {
-    final lines = widget.exercise.codeTemplate.split('\n');
+  Widget _buildCodeTemplateContent(TextScaler textScaler) {
+    final rawLines = widget.exercise.codeTemplate.split('\n');
+    int effectiveCount = rawLines.length;
+    while (effectiveCount > 0 && rawLines[effectiveCount - 1].trim().isEmpty) {
+      effectiveCount--;
+    }
+    final lines = rawLines.sublist(0, effectiveCount);
+
     final blankRegex = RegExp(r'_{2,}');
     int blankCounter = 0;
+    const double rowHeight = 44.0;
+    const double gutterWidth = 44.0;
 
-    return HorizontalScrollFadeWrapper(
-      fadeColor: AppColors.codeBackground,
-      builder: (context, controller) {
-        return SingleChildScrollView(
-          controller: controller,
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: lines.map((line) {
-              final parts = line.split(blankRegex);
-              if (parts.length == 1) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                    line,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 14,
-                      color: AppColors.codeText,
-                      height: 1.4,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final codeViewportWidth = (constraints.maxWidth - gutterWidth).clamp(0.0, double.infinity);
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Fixed Left Gutter (Line Numbers)
+            Container(
+              width: gutterWidth,
+              decoration: const BoxDecoration(
+                color: Color(0xFF161F2B),
+                border: Border(
+                  right: BorderSide(color: Color(0xFF243042), width: 1.5),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(lines.length, (index) {
+                  return Container(
+                    height: rowHeight,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: index < lines.length - 1
+                              ? AppColors.codeBorder.withValues(alpha: 0.4)
+                              : Colors.transparent,
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              }
-
-              final lineSpans = <Widget>[];
-              for (int p = 0; p < parts.length; p++) {
-                if (parts[p].isNotEmpty) {
-                  lineSpans.add(
-                    Text(
-                      parts[p],
+                    child: Text(
+                      "${index + 1}",
+                      textScaler: textScaler,
                       style: const TextStyle(
                         fontFamily: 'monospace',
-                        fontSize: 14,
-                        color: AppColors.codeText,
-                        height: 1.4,
+                        color: AppColors.textDisabled,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   );
-                }
-                if (p < parts.length - 1) {
-                  final bIndex = blankCounter;
-                  blankCounter++;
-                  lineSpans.add(
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: _buildBlankSlot(bIndex),
+                }),
+              ),
+            ),
+            // Horizontally Scrollable Code Content
+            Expanded(
+              child: HorizontalScrollFadeWrapper(
+                fadeColor: AppColors.codeBackground,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(15),
+                  bottomRight: Radius.circular(15),
+                ),
+                builder: (context, controller) {
+                  return SingleChildScrollView(
+                    controller: controller,
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: codeViewportWidth),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: lines.asMap().entries.map((entry) {
+                          final lineIndex = entry.key;
+                          final line = entry.value;
+                          final parts = line.split(blankRegex);
+
+                          final lineSpans = <Widget>[];
+                          for (int p = 0; p < parts.length; p++) {
+                            if (parts[p].isNotEmpty) {
+                              lineSpans.add(
+                                Text(
+                                  parts[p],
+                                  softWrap: false,
+                                  textScaler: textScaler,
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 13.5,
+                                    color: AppColors.codeText,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              );
+                            }
+                            if (p < parts.length - 1) {
+                              final bIndex = blankCounter;
+                              blankCounter++;
+                              lineSpans.add(
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: _buildBlankSlot(bIndex),
+                                ),
+                              );
+                            }
+                          }
+
+                          return Container(
+                            height: rowHeight,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: lineIndex < lines.length - 1
+                                      ? AppColors.codeBorder.withValues(alpha: 0.4)
+                                      : Colors.transparent,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: lineSpans,
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   );
-                }
-              }
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: lineSpans,
-                ),
-              );
-            }).toList(),
-          ),
+                },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -183,19 +252,23 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
 
   @override
   Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              "COMPLETA EL CÓDIGO FALTANTE",
-              style: TextStyle(
-                color: AppColors.duolingoOrange,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
+            const Flexible(
+              child: Text(
+                "COMPLETA EL CÓDIGO FALTANTE",
+                style: TextStyle(
+                  color: AppColors.duolingoOrange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
             Container(
@@ -235,38 +308,48 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
             color: AppColors.codeBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.codeBorder, width: 1.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Mac-style window header bar
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF161F2B),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                ),
-                child: Row(
-                  children: [
-                    Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFFF5F56), shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFFFBD2E), shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFF27C93F), shape: BoxShape.circle)),
-                    const SizedBox(width: 12),
-                    const Text(
-                      "Editor Java - Completa los espacios",
-                      style: TextStyle(color: AppColors.textDisabled, fontSize: 11, fontFamily: 'monospace'),
-                    ),
-                  ],
-                ),
-              ),
-              // Code Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildCodeTemplateContent(),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black38,
+                offset: Offset(0, 4),
+                blurRadius: 6,
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Mac-style window header bar
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF161F2B),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFFF5F56), shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFFFBD2E), shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFF27C93F), shape: BoxShape.circle)),
+                      const SizedBox(width: 12),
+                      const Flexible(
+                        child: Text(
+                          "Editor Java - Completa los espacios",
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: AppColors.textDisabled, fontSize: 11, fontFamily: 'monospace'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Code Content with fixed gutter and scrollable code
+                _buildCodeTemplateContent(textScaler),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 18),
@@ -296,6 +379,7 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.grid_view_rounded,
@@ -303,12 +387,15 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
                           color: !_isWriteMode ? AppColors.primaryGreen : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          "Opciones (Tokens)",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: !_isWriteMode ? Colors.white : AppColors.textSecondary,
+                        Flexible(
+                          child: Text(
+                            "Opciones (Tokens)",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: !_isWriteMode ? Colors.white : AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -337,6 +424,7 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.keyboard,
@@ -344,12 +432,15 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
                           color: _isWriteMode ? AppColors.duolingoOrange : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          "Escribir código",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: _isWriteMode ? Colors.white : AppColors.textSecondary,
+                        Flexible(
+                          child: Text(
+                            "Escribir código",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _isWriteMode ? Colors.white : AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],

@@ -224,6 +224,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           SpotTheBugView(
             exercise: exercise,
             selectedLineIndex: state.selectedBugLineIndex,
+            answerStatus: state.answerStatus,
             onSelectLine: (index) => notifier.selectBugLine(index),
           )
         else if (exercise is FillBlankExercise)
