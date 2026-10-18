@@ -84,21 +84,22 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
     } else {
       final isNextToFill = blankIndex == widget.filledBlanks.length;
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: isNextToFill ? AppColors.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isNextToFill ? AppColors.duolingoOrange : AppColors.textDisabled.withOpacity(0.5),
-            width: isNextToFill ? 2 : 1.5,
+            color: isNextToFill ? AppColors.duolingoOrange : AppColors.textDisabled,
+            width: isNextToFill ? 1.5 : 1.0,
           ),
         ),
         child: Text(
-          isNextToFill ? " [ toca o escribe ] " : " ______ ",
+          "____",
           style: TextStyle(
             fontFamily: 'monospace',
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
             color: isNextToFill ? AppColors.duolingoOrange : AppColors.textDisabled,
           ),
         ),
@@ -111,31 +112,18 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
     final blankRegex = RegExp(r'_{2,}');
     int blankCounter = 0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: lines.map((line) {
-        final parts = line.split(blankRegex);
-        if (parts.length == 1) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              line,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 14,
-                color: AppColors.codeText,
-                height: 1.4,
-              ),
-            ),
-          );
-        }
-
-        final lineSpans = <Widget>[];
-        for (int p = 0; p < parts.length; p++) {
-          if (parts[p].isNotEmpty) {
-            lineSpans.add(
-              Text(
-                parts[p],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: lines.map((line) {
+          final parts = line.split(blankRegex);
+          if (parts.length == 1) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                line,
                 style: const TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 14,
@@ -145,26 +133,44 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
               ),
             );
           }
-          if (p < parts.length - 1) {
-            final bIndex = blankCounter;
-            blankCounter++;
-            lineSpans.add(
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: _buildBlankSlot(bIndex),
-              ),
-            );
-          }
-        }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: lineSpans,
-          ),
-        );
-      }).toList(),
+          final lineSpans = <Widget>[];
+          for (int p = 0; p < parts.length; p++) {
+            if (parts[p].isNotEmpty) {
+              lineSpans.add(
+                Text(
+                  parts[p],
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                    color: AppColors.codeText,
+                    height: 1.4,
+                  ),
+                ),
+              );
+            }
+            if (p < parts.length - 1) {
+              final bIndex = blankCounter;
+              blankCounter++;
+              lineSpans.add(
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: _buildBlankSlot(bIndex),
+                ),
+              );
+            }
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: lineSpans,
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -326,13 +332,13 @@ class _CodeFillBlankViewState extends State<CodeFillBlankView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.keyboard_rounded,
+                          Icons.keyboard,
                           size: 16,
                           color: _isWriteMode ? AppColors.duolingoOrange : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          "Escribir código ⌨️",
+                          "Escribir código",
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

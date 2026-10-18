@@ -71,72 +71,84 @@ class SpotTheBugView extends StatelessWidget {
               ),
             ],
           ),
-          child: Column(
-            children: List.generate(exercise.codeLines.length, (index) {
-              final isSelected = selectedLineIndex == index;
-              return InkWell(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onSelectLine(index);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.errorRed.withOpacity(0.22)
-                        : Colors.transparent,
-                    border: Border(
-                      left: BorderSide(
-                        color: isSelected ? AppColors.errorRed : Colors.transparent,
-                        width: 4,
-                      ),
-                      bottom: BorderSide(
-                        color: index < exercise.codeLines.length - 1
-                            ? AppColors.codeBorder.withOpacity(0.5)
-                            : Colors.transparent,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        child: Text(
-                          "${index + 1}",
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            color: isSelected
-                                ? AppColors.errorRed
-                                : AppColors.textDisabled,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: IntrinsicWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: List.generate(exercise.codeLines.length, (index) {
+                    final isSelected = selectedLineIndex == index;
+                    return InkWell(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onSelectLine(index);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.errorRed.withOpacity(0.22)
+                              : Colors.transparent,
+                          border: Border(
+                            left: BorderSide(
+                              color: isSelected ? AppColors.errorRed : Colors.transparent,
+                              width: 4,
+                            ),
+                            bottom: BorderSide(
+                              color: index < exercise.codeLines.length - 1
+                                  ? AppColors.codeBorder.withOpacity(0.5)
+                                  : Colors.transparent,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          exercise.codeLines[index],
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 13.5,
-                            color: isSelected ? Colors.white : AppColors.codeText,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              child: Text(
+                                "${index + 1}",
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  color: isSelected
+                                      ? AppColors.errorRed
+                                      : AppColors.textDisabled,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              exercise.codeLines[index],
+                              softWrap: false,
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 13.5,
+                                color: isSelected ? Colors.white : AppColors.codeText,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            if (isSelected) ...[
+                              const SizedBox(width: 12),
+                              const Icon(
+                                Icons.error_outline_rounded,
+                                color: AppColors.errorRed,
+                                size: 20,
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (isSelected)
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          color: AppColors.errorRed,
-                          size: 20,
-                        ),
-                    ],
-                  ),
+                    );
+                  }),
                 ),
-              );
-            }),
+              ),
+            ),
           ),
         ),
       ],
